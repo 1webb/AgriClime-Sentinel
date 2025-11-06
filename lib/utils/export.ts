@@ -158,19 +158,21 @@ export async function exportToPDF(
     };
 
     // Title with green background
-    addColorBox([34, 197, 94]); // Green
+    pdf.setFillColor(34, 197, 94); // Green
+    pdf.rect(leftMargin, yPos, pageWidth, 12, "F");
+
     pdf.setTextColor(255, 255, 255);
-    pdf.setFontSize(20);
+    pdf.setFontSize(18);
     pdf.setFont("helvetica", "bold");
-    pdf.text("Climate Risk Report", leftMargin + 2, yPos - 3);
-    yPos += 2;
+    pdf.text("Climate Risk Report", leftMargin + 3, yPos + 8);
+    yPos += 15;
 
     // Location
     pdf.setTextColor(0, 0, 0);
     pdf.setFontSize(14);
     pdf.setFont("helvetica", "bold");
     pdf.text(`${data.county.name}, ${data.county.state}`, leftMargin, yPos);
-    yPos += 8;
+    yPos += 7;
 
     pdf.setFontSize(10);
     pdf.setFont("helvetica", "normal");
@@ -178,12 +180,14 @@ export async function exportToPDF(
     yPos += 10;
 
     // Current Climate Conditions
-    addColorBox([59, 130, 246], 6); // Blue
+    pdf.setFillColor(59, 130, 246); // Blue
+    pdf.rect(leftMargin, yPos, pageWidth, 8, "F");
+
     pdf.setTextColor(255, 255, 255);
-    pdf.setFontSize(14);
+    pdf.setFontSize(13);
     pdf.setFont("helvetica", "bold");
-    pdf.text("Current Climate Conditions", leftMargin + 2, yPos - 2);
-    yPos += 5;
+    pdf.text("Current Climate Conditions", leftMargin + 3, yPos + 5.5);
+    yPos += 11;
 
     pdf.setTextColor(0, 0, 0);
     const climate = data.current_climate;
@@ -235,12 +239,14 @@ export async function exportToPDF(
     yPos += 5;
 
     // Agricultural Metrics
-    addColorBox([249, 115, 22], 6); // Orange
+    pdf.setFillColor(249, 115, 22); // Orange
+    pdf.rect(leftMargin, yPos, pageWidth, 8, "F");
+
     pdf.setTextColor(255, 255, 255);
-    pdf.setFontSize(14);
+    pdf.setFontSize(13);
     pdf.setFont("helvetica", "bold");
-    pdf.text("Agricultural Metrics", leftMargin + 2, yPos - 2);
-    yPos += 5;
+    pdf.text("Agricultural Metrics", leftMargin + 3, yPos + 5.5);
+    yPos += 11;
 
     pdf.setTextColor(0, 0, 0);
     const gdd = data.growing_degree_days;
@@ -286,12 +292,14 @@ export async function exportToPDF(
 
     // Historical Trends
     if (data.historical_trends && data.historical_trends.length > 0) {
-      addColorBox([168, 85, 247], 6); // Purple
+      pdf.setFillColor(168, 85, 247); // Purple
+      pdf.rect(leftMargin, yPos, pageWidth, 8, "F");
+
       pdf.setTextColor(255, 255, 255);
-      pdf.setFontSize(14);
+      pdf.setFontSize(13);
       pdf.setFont("helvetica", "bold");
-      pdf.text("Historical Trends (Last 10 Years)", leftMargin + 2, yPos - 2);
-      yPos += 5;
+      pdf.text("Historical Trends (Last 10 Years)", leftMargin + 3, yPos + 5.5);
+      yPos += 11;
 
       pdf.setTextColor(0, 0, 0);
       const recentTrends = data.historical_trends.slice(-10);
@@ -499,19 +507,21 @@ export async function exportAtmosphericDataToPDF(
     };
 
     // Title with blue background
-    addColorBox([37, 99, 235]); // Blue
+    pdf.setFillColor(37, 99, 235); // Blue
+    pdf.rect(leftMargin, yPos, pageWidth, 12, "F");
+
     pdf.setTextColor(255, 255, 255);
-    pdf.setFontSize(20);
+    pdf.setFontSize(18);
     pdf.setFont("helvetica", "bold");
-    pdf.text("Atmospheric Science Report", leftMargin + 2, yPos - 3);
-    yPos += 2;
+    pdf.text("Atmospheric Science Report", leftMargin + 3, yPos + 8);
+    yPos += 15;
 
     // Location
     pdf.setTextColor(0, 0, 0);
     pdf.setFontSize(14);
     pdf.setFont("helvetica", "bold");
     pdf.text(`${countyName}, ${state}`, leftMargin, yPos);
-    yPos += 8;
+    yPos += 7;
 
     pdf.setFontSize(10);
     pdf.setFont("helvetica", "normal");
@@ -520,12 +530,14 @@ export async function exportAtmosphericDataToPDF(
 
     // Weather Alerts Section
     if (data.alerts && data.alerts.length > 0) {
-      addColorBox([239, 68, 68], 6); // Red
+      pdf.setFillColor(239, 68, 68); // Red
+      pdf.rect(leftMargin, yPos, pageWidth, 8, "F");
+
       pdf.setTextColor(255, 255, 255);
-      pdf.setFontSize(14);
+      pdf.setFontSize(13);
       pdf.setFont("helvetica", "bold");
-      pdf.text("⚠ Active Weather Alerts", leftMargin + 2, yPos - 2);
-      yPos += 5;
+      pdf.text("⚠ Active Weather Alerts", leftMargin + 3, yPos + 5.5);
+      yPos += 11;
 
       data.alerts.forEach((alert: any) => {
         pdf.setTextColor(0, 0, 0);
@@ -539,12 +551,14 @@ export async function exportAtmosphericDataToPDF(
         yPos += 3;
       });
     } else {
-      addColorBox([34, 197, 94], 6); // Green
+      pdf.setFillColor(34, 197, 94); // Green
+      pdf.rect(leftMargin, yPos, pageWidth, 8, "F");
+
       pdf.setTextColor(255, 255, 255);
-      pdf.setFontSize(14);
+      pdf.setFontSize(13);
       pdf.setFont("helvetica", "bold");
-      pdf.text("✓ No Active Weather Alerts", leftMargin + 2, yPos - 2);
-      yPos += 8;
+      pdf.text("✓ No Active Weather Alerts", leftMargin + 3, yPos + 5.5);
+      yPos += 11;
     }
 
     // Air Quality Section
@@ -558,12 +572,14 @@ export async function exportAtmosphericDataToPDF(
       else if (aqi > 100) aqiColor = [249, 115, 22]; // Orange
       else if (aqi > 50) aqiColor = [234, 179, 8]; // Yellow
 
-      addColorBox(aqiColor, 6);
+      pdf.setFillColor(aqiColor[0], aqiColor[1], aqiColor[2]);
+      pdf.rect(leftMargin, yPos, pageWidth, 8, "F");
+
       pdf.setTextColor(255, 255, 255);
-      pdf.setFontSize(14);
+      pdf.setFontSize(13);
       pdf.setFont("helvetica", "bold");
-      pdf.text("Air Quality Index", leftMargin + 2, yPos - 2);
-      yPos += 5;
+      pdf.text("Air Quality Index", leftMargin + 3, yPos + 5.5);
+      yPos += 11;
 
       pdf.setTextColor(0, 0, 0);
       addText(`AQI: ${aqi} - ${category}`, 12, true);
@@ -579,12 +595,14 @@ export async function exportAtmosphericDataToPDF(
 
     // Severe Weather Indices
     if (data.severeWeather) {
-      addColorBox([168, 85, 247], 6); // Purple
+      pdf.setFillColor(168, 85, 247); // Purple
+      pdf.rect(leftMargin, yPos, pageWidth, 8, "F");
+
       pdf.setTextColor(255, 255, 255);
-      pdf.setFontSize(14);
+      pdf.setFontSize(13);
       pdf.setFont("helvetica", "bold");
-      pdf.text("Severe Weather Indices", leftMargin + 2, yPos - 2);
-      yPos += 5;
+      pdf.text("Severe Weather Indices", leftMargin + 3, yPos + 5.5);
+      yPos += 11;
 
       pdf.setTextColor(0, 0, 0);
       const indices = data.severeWeather.indices || data.severeWeather;
@@ -602,6 +620,9 @@ export async function exportAtmosphericDataToPDF(
       }
       if (indices.lifted_index !== undefined) {
         addText(`Lifted Index: ${indices.lifted_index.toFixed(1)}`, 10);
+      }
+      if (indices.total_totals !== undefined) {
+        addText(`Total Totals Index: ${indices.total_totals.toFixed(1)}`, 10);
       }
       yPos += 5;
     }
