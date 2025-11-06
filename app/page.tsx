@@ -150,10 +150,10 @@ export default function Home() {
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col md:flex-row overflow-hidden relative">
-        {/* Mobile Sidebar Toggle Button - Fixed position on map */}
+        {/* Mobile Sidebar Toggle Button - Bottom-right for easy thumb reach */}
         <button
           onClick={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
-          className="md:hidden fixed top-20 left-4 z-[1000] bg-blue-600 text-white p-3 rounded-full shadow-2xl hover:bg-blue-700 transition-all duration-200 flex items-center gap-2"
+          className="md:hidden fixed bottom-6 right-4 z-[1000] bg-blue-600 text-white p-3 rounded-full shadow-2xl hover:bg-blue-700 transition-all duration-200 flex items-center gap-2"
           aria-label="Toggle sidebar"
         >
           {isMobileSidebarOpen ? (

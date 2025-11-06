@@ -144,3 +144,11 @@ body {
 .county-polygon {
   transition: fill-opacity 1s ease-in-out;
 }
+
+/* Adjust Leaflet attribution to not conflict with mobile controls button */
+@media (max-width: 768px) {
+  .leaflet-control-attribution {
+    margin-bottom: 70px !important; /* Space for floating button */
+    margin-right: 4px !important;
+  }
+}
