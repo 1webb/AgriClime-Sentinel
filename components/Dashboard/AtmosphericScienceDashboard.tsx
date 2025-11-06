@@ -55,7 +55,11 @@ interface AirQualityData {
     };
     dominantPollutant: string;
   };
-  recommendations: string[];
+  recommendations: {
+    general: string;
+    sensitiveGroups: string;
+    activities: string;
+  };
   observations: AirQualityObservation[];
 }
 
@@ -943,23 +947,21 @@ export default function AtmosphericScienceDashboard({
                         </p>
                         <p
                           className={`text-4xl font-bold ${
-                            climateTrends.trend.trendDirection === "Increasing"
+                            climateTrends.trend.direction === "Increasing"
                               ? "text-red-600"
-                              : climateTrends.trend.trendDirection ===
-                                "Decreasing"
+                              : climateTrends.trend.direction === "Decreasing"
                               ? "text-blue-600"
                               : "text-gray-600"
                           }`}
                         >
-                          {climateTrends.trend.trendDirection === "Increasing"
+                          {climateTrends.trend.direction === "Increasing"
                             ? "↑"
-                            : climateTrends.trend.trendDirection ===
-                              "Decreasing"
+                            : climateTrends.trend.direction === "Decreasing"
                             ? "↓"
                             : "→"}
                         </p>
                         <p className="text-sm text-gray-700 mt-1 font-medium">
-                          {climateTrends.trend.trendDirection}
+                          {climateTrends.trend.direction}
                         </p>
                       </div>
                       <div className="text-center p-5 bg-white rounded-xl shadow-sm border border-gray-100">
@@ -979,8 +981,12 @@ export default function AtmosphericScienceDashboard({
                           Total Change
                         </p>
                         <p className="text-4xl font-bold text-orange-600">
-                          {climateTrends.trend.percentChange > 0 ? "+" : ""}
-                          {climateTrends.trend.percentChange.toFixed(2)}%
+                          {climateTrends.trend.slope > 0 ? "+" : ""}
+                          {(
+                            climateTrends.trend.slope *
+                            climateTrends.period.yearsAnalyzed
+                          ).toFixed(2)}
+                          °C
                         </p>
                         <p className="text-xs text-gray-500 mt-1">
                           {climateTrends.period.startYear} -{" "}
@@ -993,14 +999,19 @@ export default function AtmosphericScienceDashboard({
                         </p>
                         <p
                           className={`text-4xl font-bold ${
-                            climateTrends.trend.isSignificant
+                            climateTrends.trend.significance === "Significant"
                               ? "text-green-600"
                               : "text-gray-600"
                           }`}
                         >
-                          {climateTrends.trend.isSignificant ? "✓" : "✗"}
+                          {climateTrends.trend.significance === "Significant"
+                            ? "✓"
+                            : "✗"}
                         </p>
                         <p className="text-xs text-gray-500 mt-1">
+                          {climateTrends.trend.significance}
+                        </p>
+                        <p className="text-xs text-gray-500">
                           p = {climateTrends.trend.pValue.toFixed(4)}
                         </p>
                       </div>
@@ -1012,7 +1023,14 @@ export default function AtmosphericScienceDashboard({
                           📊 Interpretation:
                         </strong>
                         <br />
-                        {climateTrends.trend.interpretation}
+                        The temperature trend shows a{" "}
+                        {climateTrends.trend.direction.toLowerCase()} pattern
+                        with a rate of{" "}
+                        {Math.abs(climateTrends.trend.slope).toFixed(3)}°C per
+                        year. This trend is{" "}
+                        {climateTrends.trend.significance.toLowerCase()}
+                        (p = {climateTrends.trend.pValue.toFixed(4)}) with an R²
+                        of {climateTrends.trend.rSquared.toFixed(3)}.
                       </p>
                     </div>
                   </div>
@@ -1071,53 +1089,6 @@ export default function AtmosphericScienceDashboard({
                           />
                         </LineChart>
                       </ResponsiveContainer>
-                    </div>
-                  )}
-
-                  {/* Extreme Events */}
-                  {climateTrends.extremes && (
-                    <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
-                      <h4 className="text-xl font-bold text-gray-800 mb-6">
-                        Extreme Weather Events
-                      </h4>
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <div className="text-center p-6 bg-gradient-to-br from-red-50 to-red-100 border-2 border-red-300 rounded-xl hover:shadow-lg transition-shadow">
-                          <p className="text-sm font-semibold text-gray-700 mb-2">
-                            Heat Waves
-                          </p>
-                          <p className="text-5xl font-bold text-red-600 mb-1">
-                            {climateTrends.extremes.heatWaves}
-                          </p>
-                          <p className="text-xs text-gray-600">events</p>
-                        </div>
-                        <div className="text-center p-6 bg-gradient-to-br from-blue-50 to-blue-100 border-2 border-blue-300 rounded-xl hover:shadow-lg transition-shadow">
-                          <p className="text-sm font-semibold text-gray-700 mb-2">
-                            Cold Waves
-                          </p>
-                          <p className="text-5xl font-bold text-blue-600 mb-1">
-                            {climateTrends.extremes.coldWaves}
-                          </p>
-                          <p className="text-xs text-gray-600">events</p>
-                        </div>
-                        <div className="text-center p-6 bg-gradient-to-br from-orange-50 to-orange-100 border-2 border-orange-300 rounded-xl hover:shadow-lg transition-shadow">
-                          <p className="text-sm font-semibold text-gray-700 mb-2">
-                            Extreme Heat Days
-                          </p>
-                          <p className="text-5xl font-bold text-orange-600 mb-1">
-                            {climateTrends.extremes.extremeHeatDays}
-                          </p>
-                          <p className="text-xs text-gray-600">days</p>
-                        </div>
-                        <div className="text-center p-6 bg-gradient-to-br from-indigo-50 to-indigo-100 border-2 border-indigo-300 rounded-xl hover:shadow-lg transition-shadow">
-                          <p className="text-sm font-semibold text-gray-700 mb-2">
-                            Extreme Precip Days
-                          </p>
-                          <p className="text-5xl font-bold text-indigo-600 mb-1">
-                            {climateTrends.extremes.extremePrecipitationDays}
-                          </p>
-                          <p className="text-xs text-gray-600">days</p>
-                        </div>
-                      </div>
                     </div>
                   )}
                 </>

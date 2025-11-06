@@ -48,8 +48,6 @@ export default function Home() {
    * - 99.7% faster response time
    */
   const handleCountyClick = async (fips: string) => {
-    setIsTransitioning(true);
-
     // Fetch only the clicked county (fast, <100ms)
     try {
       const response = await fetch(`/api/counties?fips=${fips}`);
@@ -85,7 +83,6 @@ export default function Home() {
 
     setTimeout(() => {
       setSelectedCounty(fips);
-      setIsTransitioning(false);
     }, 150);
   };
 

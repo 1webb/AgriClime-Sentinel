@@ -232,16 +232,24 @@ export async function getAllTemperatureAnomalies(date: string) {
 
   // Calculate anomalies
   const baselineMap = new Map(
-    allBaselines.map((b) => [b.county_fips, b.temperature_avg])
+    allBaselines.map((b) => [
+      (b as { county_fips: string }).county_fips,
+      (b as { temperature_avg: number }).temperature_avg,
+    ])
   );
 
-  const result = allClimateData.map((cd) => ({
-    fips: cd.county_fips,
-    county_fips: cd.county_fips,
-    current_avg: cd.temperature_avg,
-    baseline_avg: baselineMap.get(cd.county_fips) || 0,
-    anomaly: cd.temperature_avg - (baselineMap.get(cd.county_fips) || 0),
-  }));
+  const result = allClimateData.map((cd) => {
+    const climateData = cd as { county_fips: string; temperature_avg: number };
+    return {
+      fips: climateData.county_fips,
+      county_fips: climateData.county_fips,
+      current_avg: climateData.temperature_avg,
+      baseline_avg: baselineMap.get(climateData.county_fips) || 0,
+      anomaly:
+        climateData.temperature_avg -
+        (baselineMap.get(climateData.county_fips) || 0),
+    };
+  });
 
   console.log(`Calculated ${result.length} temperature anomalies`);
   return result;

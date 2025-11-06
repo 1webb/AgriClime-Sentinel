@@ -324,7 +324,7 @@ export async function GET(request: NextRequest) {
     // Detect change points
     const changePoints = detectChangePoints(trendData);
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       fips,
       type,
@@ -344,7 +344,7 @@ export async function GET(request: NextRequest) {
       changePoints,
     });
 
-    return addRateLimitHeaders(jsonResponse, rateLimitResult);
+    return addRateLimitHeaders(response, rateLimitResult);
   } catch {
     return NextResponse.json(
       { error: "Failed to analyze climate trends" },

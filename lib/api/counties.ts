@@ -28,9 +28,12 @@ export async function getAllCounties(): Promise<County[]> {
           let latitude = 39.8283; // Default: center of US
           let longitude = -98.5795;
 
-          if (county.geometry && county.geometry.coordinates) {
+          const geometry = county.geometry as
+            | { coordinates: number[][][] }
+            | undefined;
+          if (geometry && geometry.coordinates) {
             try {
-              const coords = county.geometry.coordinates[0];
+              const coords = geometry.coordinates[0];
               if (Array.isArray(coords) && coords.length > 0) {
                 const lats = coords.map((c: number[]) => c[1]);
                 const lons = coords.map((c: number[]) => c[0]);
@@ -49,7 +52,7 @@ export async function getAllCounties(): Promise<County[]> {
           return {
             ...county,
             centroid: { latitude, longitude },
-          };
+          } as County;
         }
       );
 
