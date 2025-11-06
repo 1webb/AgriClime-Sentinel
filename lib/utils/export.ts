@@ -449,24 +449,47 @@ export async function exportChartAsPNG(
  */
 async function captureChartAsImage(chartId: string): Promise<string | null> {
   try {
+    console.log(`Attempting to capture chart: ${chartId}`);
+
     const element = document.getElementById(chartId);
-    if (!element) return null;
+    if (!element) {
+      console.warn(`Chart element not found: ${chartId}`);
+      return null;
+    }
 
     const svgElement = element.querySelector("svg");
-    if (!svgElement) return null;
+    if (!svgElement) {
+      console.warn(`SVG element not found in: ${chartId}`);
+      return null;
+    }
+
+    console.log(`Found SVG for ${chartId}, capturing...`);
 
     const svgRect = svgElement.getBoundingClientRect();
-    const svgData = new XMLSerializer().serializeToString(svgElement);
+
+    // Clone the SVG to avoid modifying the original
+    const clonedSvg = svgElement.cloneNode(true) as SVGElement;
+
+    // Set explicit dimensions
+    clonedSvg.setAttribute("width", svgRect.width.toString());
+    clonedSvg.setAttribute("height", svgRect.height.toString());
+
+    const svgData = new XMLSerializer().serializeToString(clonedSvg);
 
     const canvas = document.createElement("canvas");
     canvas.width = svgRect.width * 2;
     canvas.height = svgRect.height * 2;
     const ctx = canvas.getContext("2d");
 
-    if (!ctx) return null;
+    if (!ctx) {
+      console.warn("Failed to get canvas context");
+      return null;
+    }
 
+    // Fill with white background
     ctx.fillStyle = "#ffffff";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.scale(2, 2);
 
     return new Promise((resolve) => {
       const img = new Image();
@@ -476,19 +499,23 @@ async function captureChartAsImage(chartId: string): Promise<string | null> {
       const url = URL.createObjectURL(svgBlob);
 
       img.onload = () => {
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0, svgRect.width, svgRect.height);
         URL.revokeObjectURL(url);
-        resolve(canvas.toDataURL("image/png"));
+        const dataUrl = canvas.toDataURL("image/png");
+        console.log(`Successfully captured ${chartId}`);
+        resolve(dataUrl);
       };
 
-      img.onerror = () => {
+      img.onerror = (error) => {
+        console.error(`Failed to load image for ${chartId}:`, error);
         URL.revokeObjectURL(url);
         resolve(null);
       };
 
       img.src = url;
     });
-  } catch {
+  } catch (error) {
+    console.error(`Error capturing chart ${chartId}:`, error);
     return null;
   }
 }
@@ -508,6 +535,11 @@ export async function exportAtmosphericDataToPDF(
   filename: string = "atmospheric-report.pdf"
 ) {
   try {
+    console.log("Starting PDF export with charts...");
+
+    // Small delay to ensure all charts are fully rendered
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
     const pdf = new jsPDF({
       orientation: "portrait",
       unit: "mm",
@@ -576,10 +608,13 @@ export async function exportAtmosphericDataToPDF(
       maxWidth: number = 170,
       maxHeight: number = 100
     ) => {
+      console.log(`Adding chart to PDF: ${chartTitle}`);
+
       const imageData = await captureChartAsImage(chartId);
       if (!imageData) {
+        console.warn(`Chart image not available: ${chartTitle}`);
         addText(
-          `[Chart: ${chartTitle} - Not available]`,
+          `[Chart: ${chartTitle} - Image not available. Please ensure the chart is visible on screen.]`,
           9,
           false,
           [150, 150, 150]
@@ -597,7 +632,18 @@ export async function exportAtmosphericDataToPDF(
       yPos += 7;
 
       // Add image
-      pdf.addImage(imageData, "PNG", leftMargin, yPos, maxWidth, maxHeight);
+      try {
+        pdf.addImage(imageData, "PNG", leftMargin, yPos, maxWidth, maxHeight);
+        console.log(`Successfully added chart to PDF: ${chartTitle}`);
+      } catch (error) {
+        console.error(`Failed to add image to PDF: ${chartTitle}`, error);
+        addText(
+          `[Chart: ${chartTitle} - Failed to embed image]`,
+          9,
+          false,
+          [150, 150, 150]
+        );
+      }
       yPos += maxHeight + 8;
     };
 
