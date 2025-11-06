@@ -490,7 +490,11 @@ export default function AtmosphericScienceDashboard({
                     <h4 className="text-base sm:text-lg md:text-xl font-bold text-gray-800 mb-3 sm:mb-4">
                       Atmospheric Instability Indices
                     </h4>
-                    <ResponsiveContainer width="100%" height={300}>
+                    <ResponsiveContainer
+                      width="100%"
+                      height={250}
+                      className="sm:!h-[300px] md:!h-[350px]"
+                    >
                       <BarChart
                         data={[
                           {
@@ -528,17 +532,24 @@ export default function AtmosphericScienceDashboard({
                         ]}
                       >
                         <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="name" />
-                        <YAxis />
+                        <XAxis
+                          dataKey="name"
+                          tick={{ fontSize: 10 }}
+                          className="sm:text-xs md:text-sm"
+                        />
+                        <YAxis
+                          tick={{ fontSize: 10 }}
+                          className="sm:text-xs md:text-sm"
+                        />
                         <Tooltip
                           content={({ active, payload }) => {
                             if (active && payload && payload.length) {
                               return (
-                                <div className="bg-white border border-gray-300 rounded-lg p-3 shadow-lg">
-                                  <p className="font-semibold text-gray-800">
+                                <div className="bg-white border border-gray-300 rounded-lg p-2 sm:p-3 shadow-lg">
+                                  <p className="font-semibold text-gray-800 text-xs sm:text-sm">
                                     {payload[0].payload.name}
                                   </p>
-                                  <p className="text-gray-600">
+                                  <p className="text-gray-600 text-xs sm:text-sm">
                                     Value: {payload[0].value?.toFixed(1)}{" "}
                                     {payload[0].payload.unit}
                                   </p>
@@ -866,30 +877,41 @@ export default function AtmosphericScienceDashboard({
                           <h4 className="text-base sm:text-lg md:text-xl font-bold text-gray-800 mb-3 sm:mb-4">
                             Pollutant Comparison
                           </h4>
-                          <ResponsiveContainer width="100%" height={300}>
+                          <ResponsiveContainer
+                            width="100%"
+                            height={250}
+                            className="sm:!h-[300px] md:!h-[350px]"
+                          >
                             <BarChart data={airQuality.observations}>
                               <CartesianGrid strokeDasharray="3 3" />
-                              <XAxis dataKey="parameterName" />
+                              <XAxis
+                                dataKey="parameterName"
+                                tick={{ fontSize: 10 }}
+                                className="sm:text-xs md:text-sm"
+                              />
                               <YAxis
                                 label={{
                                   value: "AQI",
                                   angle: -90,
                                   position: "insideLeft",
+                                  style: { fontSize: 12 },
                                 }}
+                                tick={{ fontSize: 10 }}
+                                className="sm:text-xs md:text-sm"
                               />
                               <Tooltip
                                 content={({ active, payload }) => {
                                   if (active && payload && payload.length) {
                                     return (
-                                      <div className="bg-white border-2 border-gray-300 rounded-lg p-3 shadow-xl">
-                                        <p className="font-semibold text-gray-800">
+                                      <div className="bg-white border-2 border-gray-300 rounded-lg p-2 sm:p-3 shadow-xl">
+                                        <p className="font-semibold text-gray-800 text-xs sm:text-sm">
                                           {payload[0].payload.parameterName}
                                         </p>
-                                        <p className="text-gray-600">
+                                        <p className="text-gray-600 text-xs sm:text-sm">
                                           AQI: {payload[0].value}
                                         </p>
                                         <p
-                                          className="text-sm font-semibold mt-1"
+                                          className="text-xs sm:text-sm font-semibold mt-1"
                                           style={{
                                             color:
                                               payload[0].payload.category
@@ -1054,7 +1076,11 @@ export default function AtmosphericScienceDashboard({
                         Temperature Trend ({climateTrends.period.startYear} -{" "}
                         {climateTrends.period.endYear})
                       </h4>
-                      <ResponsiveContainer width="100%" height={400}>
+                      <ResponsiveContainer
+                        width="100%"
+                        height={300}
+                        className="sm:!h-[350px] md:!h-[400px]"
+                      >
                         <LineChart data={climateTrends.data}>
                           <CartesianGrid
                             strokeDasharray="3 3"
@@ -1062,32 +1088,39 @@ export default function AtmosphericScienceDashboard({
                           />
                           <XAxis
                             dataKey="year"
-                            tick={{ fontSize: 12 }}
+                            tick={{ fontSize: 10 }}
                             tickFormatter={(value) => value.toString()}
+                            className="sm:text-xs md:text-sm"
                           />
                           <YAxis
                             label={{
                               value: "Temperature (°C)",
                               angle: -90,
                               position: "insideLeft",
-                              style: { fontSize: 14, fontWeight: 600 },
+                              style: { fontSize: 11, fontWeight: 600 },
                             }}
-                            tick={{ fontSize: 12 }}
+                            tick={{ fontSize: 10 }}
+                            className="sm:text-xs md:text-sm"
                           />
                           <Tooltip
                             contentStyle={{
                               backgroundColor: "white",
                               border: "2px solid #3B82F6",
                               borderRadius: "8px",
-                              padding: "10px",
+                              padding: "8px",
+                              fontSize: "12px",
                             }}
                             labelStyle={{
                               fontWeight: "bold",
                               color: "#1F2937",
+                              fontSize: "12px",
                             }}
                           />
                           <Legend
-                            wrapperStyle={{ paddingTop: "20px" }}
+                            wrapperStyle={{
+                              paddingTop: "12px",
+                              fontSize: "11px",
+                            }}
                             iconType="line"
                           />
                           <Line
@@ -1095,9 +1128,10 @@ export default function AtmosphericScienceDashboard({
                             dataKey="value"
                             stroke="#3B82F6"
                             name="Annual Average Temperature"
-                            strokeWidth={3}
-                            dot={{ fill: "#3B82F6", r: 2 }}
-                            activeDot={{ r: 6 }}
+                            strokeWidth={2}
+                            dot={{ fill: "#3B82F6", r: 1.5 }}
+                            activeDot={{ r: 5 }}
+                            className="sm:!stroke-[2.5] md:!stroke-[3]"
                           />
                         </LineChart>
                       </ResponsiveContainer>
