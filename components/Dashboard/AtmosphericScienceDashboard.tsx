@@ -23,6 +23,7 @@ import {
 } from "recharts";
 import type { WeatherAlert } from "@/lib/api/noaa-weather";
 import type { SevereWeatherIndices } from "@/lib/api/severe-weather-indices";
+import AtmosphericExportButtons from "@/components/Export/AtmosphericExportButtons";
 
 interface AirQualityObservation {
   dateObserved: string;
@@ -241,7 +242,7 @@ export default function AtmosphericScienceDashboard({
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start sm:items-center justify-center z-[9999] p-0 sm:p-4 animate-fadeIn overflow-y-auto">
       <div className="bg-white rounded-none sm:rounded-xl md:rounded-2xl shadow-2xl w-full max-w-7xl min-h-screen sm:min-h-0 sm:max-h-[95vh] animate-scaleIn flex flex-col">
         {/* Header */}
-        <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-3 sm:p-4 md:p-6 flex justify-between items-start sm:items-center flex-shrink-0">
+        <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-3 sm:p-4 md:p-6 flex justify-between items-start sm:items-center flex-shrink-0 gap-2 sm:gap-4">
           <div className="flex-1 min-w-0">
             <h2 className="text-lg sm:text-2xl md:text-3xl font-bold truncate">
               Atmospheric Science Dashboard
@@ -253,9 +254,25 @@ export default function AtmosphericScienceDashboard({
               {latitude.toFixed(4)}°N, {Math.abs(longitude).toFixed(4)}°W
             </p>
           </div>
+
+          {/* Export Button */}
+          <div className="flex-shrink-0">
+            <AtmosphericExportButtons
+              countyName={countyName}
+              state={state}
+              data={{
+                alerts: weatherAlerts,
+                severeWeather: severeWeatherData,
+                airQuality: airQualityData,
+                climateTrends: climateTrendsData,
+              }}
+              dashboardElementId="atmospheric-dashboard-content"
+            />
+          </div>
+
           <button
             onClick={onClose}
-            className="text-white hover:bg-white hover:bg-opacity-20 rounded-full p-1.5 sm:p-2 transition-all duration-200 flex-shrink-0 ml-2"
+            className="text-white hover:bg-white hover:bg-opacity-20 rounded-full p-1.5 sm:p-2 transition-all duration-200 flex-shrink-0"
           >
             <X size={20} className="sm:hidden" />
             <X size={28} className="hidden sm:block" />
@@ -311,7 +328,10 @@ export default function AtmosphericScienceDashboard({
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6">
+        <div
+          id="atmospheric-dashboard-content"
+          className="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6"
+        >
           {/* Weather Alerts Tab */}
           {activeTab === "alerts" && (
             <div className="space-y-3 sm:space-y-4">

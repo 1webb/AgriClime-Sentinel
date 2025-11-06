@@ -14,6 +14,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
+import ExportButtons from "@/components/Export/ExportButtons";
 
 interface RegionalDashboardProps {
   countyFips: string;
@@ -127,7 +128,7 @@ export default function RegionalDashboard({
     <div className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-[9999] p-2 sm:p-4 overflow-y-auto animate-fadeIn">
       <div className="bg-white rounded-xl sm:rounded-2xl shadow-2xl max-w-7xl w-full max-h-[98vh] sm:max-h-[95vh] overflow-hidden flex flex-col animate-slideUp my-2 sm:my-0">
         {/* Header */}
-        <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-3 sm:p-4 md:p-6 flex justify-between items-start sm:items-center">
+        <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-3 sm:p-4 md:p-6 flex justify-between items-start sm:items-center gap-2 sm:gap-4">
           <div className="flex-1 min-w-0">
             <h2 className="text-lg sm:text-2xl md:text-3xl font-bold truncate">
               {data.county.name}, {data.county.state}
@@ -136,9 +137,20 @@ export default function RegionalDashboard({
               Regional Climate Dashboard
             </p>
           </div>
+
+          {/* Export Button */}
+          <div className="flex-shrink-0">
+            <ExportButtons
+              data={data}
+              dashboardElementId="regional-dashboard-content"
+              chartElementId="historical-trends-chart"
+              type="agricultural"
+            />
+          </div>
+
           <button
             onClick={onClose}
-            className="text-white hover:bg-white hover:bg-opacity-20 rounded-full w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center text-2xl sm:text-3xl font-bold transition-all flex-shrink-0 ml-2"
+            className="text-white hover:bg-white hover:bg-opacity-20 rounded-full w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center text-2xl sm:text-3xl font-bold transition-all flex-shrink-0"
             aria-label="Close"
           >
             ×
@@ -146,7 +158,10 @@ export default function RegionalDashboard({
         </div>
 
         {/* Content - Scrollable */}
-        <div className="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6 bg-gray-50">
+        <div
+          id="regional-dashboard-content"
+          className="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6 bg-gray-50"
+        >
           {/* Current Conditions */}
           <div
             className="bg-white rounded-lg sm:rounded-xl shadow-md p-4 sm:p-6 animate-slideUp"
@@ -299,7 +314,10 @@ export default function RegionalDashboard({
               </span>
               Historical Drought Trends (50-Year Analysis)
             </h3>
-            <div className="bg-gray-50 rounded-lg p-4">
+            <div
+              id="historical-trends-chart"
+              className="bg-gray-50 rounded-lg p-4"
+            >
               <ResponsiveContainer width="100%" height={350}>
                 <LineChart data={data.historical_trends}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
