@@ -1,7 +1,73 @@
 # AgriClime Sentinel - Data Source Audit Report
 
-**Generated:** 2025-11-06  
+**Generated:** 2025-11-06
 **Purpose:** Verify which data layers use real APIs vs sample/database data
+
+---
+
+## 🎯 **Application Architecture Overview**
+
+### **Two-Tier Data Strategy**
+
+AgriClime Sentinel uses a **hybrid data architecture** that balances performance with accuracy:
+
+#### **Tier 1: Map View (Sample Data)** 🗺️
+
+- **What:** 5 map data layers showing all 3,221 US counties
+- **Data Source:** PostgreSQL database with algorithmically-generated sample data
+- **Load Time:** <1 second
+- **Purpose:** Fast exploration of national climate patterns
+- **User Experience:** Instant visualization, smooth panning/zooming
+
+#### **Tier 2: County Dashboard (Real Data)** 📊
+
+- **What:** Atmospheric Science Dashboard with 4 real-time features
+- **Data Source:** Government APIs (NOAA, EPA, Open-Meteo)
+- **Load Time:** 2-5 seconds per county
+- **Purpose:** Accurate, real-time data for specific locations
+- **User Experience:** Click any county → Get real government data
+
+### **Why This Architecture?**
+
+| Approach          | Map Layers (All Counties) | County Dashboard (Single County) |
+| ----------------- | ------------------------- | -------------------------------- |
+| **Real-Time API** | ❌ 65-90 seconds          | ✅ 2-5 seconds                   |
+| **Sample Data**   | ✅ <1 second              | ❌ Not accurate                  |
+| **Our Solution**  | ✅ Sample (fast)          | ✅ Real (accurate)               |
+
+**Result:** Best of both worlds - fast exploration + accurate details! 🚀
+
+### **User Flow**
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  1. User Opens Map                                              │
+│     ↓                                                            │
+│  2. Selects Data Layer (Drought, Precipitation, etc.)           │
+│     ↓                                                            │
+│  3. Map Shows 3,221 Counties with Sample Data (<1 second) ✅    │
+│     - Fast visualization                                         │
+│     - Color-coded by values                                      │
+│     - Smooth interaction                                         │
+│     ↓                                                            │
+│  4. User Clicks on Specific County                              │
+│     ↓                                                            │
+│  5. Atmospheric Science Dashboard Opens (2-5 seconds) ✅        │
+│     ├─ Weather Alerts (NOAA NWS API) → Real Data               │
+│     ├─ Severe Weather (NOAA HRRR) → Real Data (with fallback)  │
+│     ├─ Air Quality (EPA AirNow) → Real Data                    │
+│     └─ Climate Trends (Open-Meteo) → Real Data                 │
+│                                                                  │
+│  Result: User gets fast exploration + accurate county details!  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### **Data Flow Summary**
+
+| User Action         | Data Source         | Response Time | Data Type               |
+| ------------------- | ------------------- | ------------- | ----------------------- |
+| **View Map Layers** | PostgreSQL Database | <1 second     | Sample (3,221 counties) |
+| **Click County**    | Government APIs     | 2-5 seconds   | Real (1 county)         |
 
 ---
 
