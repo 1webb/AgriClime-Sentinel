@@ -184,7 +184,7 @@ The index is calibrated for five major U.S. crops, each with unique growth stage
 
 ---
 
-## 🎨 Recent Improvements (November 2024)
+## 🎨 Recent Improvements (November 2025)
 
 ### Data Architecture Overhaul
 

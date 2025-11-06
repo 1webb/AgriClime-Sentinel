@@ -1,6 +1,6 @@
 # AgriClime Sentinel - Data Source Audit Report
 
-**Generated:** 2025-11-06
+**Generated:** January 6, 2025
 **Purpose:** Verify which data layers use real APIs vs sample/database data
 
 ---

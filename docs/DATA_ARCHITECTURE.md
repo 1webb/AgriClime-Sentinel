@@ -8,6 +8,7 @@
 ## 🎯 **Overview**
 
 AgriClime Sentinel uses a **two-tier hybrid data architecture** that provides:
+
 - ✅ **Fast map exploration** with sample data
 - ✅ **Accurate county details** with real government APIs
 
@@ -66,11 +67,13 @@ This architecture ensures optimal user experience while maintaining data accurac
 ## 📊 **Tier 1: Map View (Sample Data)**
 
 ### **What It Does**
+
 - Displays 5 climate data layers across all 3,221 US counties
 - Provides instant visualization of national climate patterns
 - Enables fast exploration and comparison
 
 ### **Data Layers**
+
 1. 🌧️ **Drought Status** - Drought severity index (D0-D4)
 2. 💧 **30-Day Precipitation** - Total rainfall in last 30 days
 3. 🌡️ **Temperature Anomaly** - Deviation from 5-year baseline
@@ -78,29 +81,32 @@ This architecture ensures optimal user experience while maintaining data accurac
 5. 🌾 **Crop Risk** - Agricultural risk scores by crop type
 
 ### **Data Source**
+
 - **PostgreSQL Database** (Supabase)
 - **Materialized Views:** `current_drought_status`, `precipitation_30day`
 - **Tables:** `climate_data`, `crop_risk_indices`
 
 ### **Data Generation**
+
 - Algorithmically generated using realistic climate patterns
 - Based on NOAA regional climate trends and warming rates
 - Populated via scripts: `populate-sample-data.ts`, `populate-crop-risk-data.ts`
 
 ### **Performance**
+
 - **Load Time:** <1 second for all 3,221 counties
 - **Cache Duration:** 6 hours (in-memory cache)
 - **User Experience:** Instant, smooth, responsive
 
 ### **Why Sample Data?**
 
-| Metric | Real-Time API | Sample Data |
-|--------|---------------|-------------|
-| **Load Time** | 65-90 seconds ❌ | <1 second ✅ |
-| **API Calls** | 16,105 calls (5 layers × 3,221 counties) | 0 calls |
-| **Rate Limits** | Exceeds 10,000/day limit ❌ | No limits ✅ |
-| **Browser Timeout** | 30-60 seconds ❌ | Never times out ✅ |
-| **User Experience** | Frustrating wait ❌ | Instant visualization ✅ |
+| Metric              | Real-Time API                            | Sample Data              |
+| ------------------- | ---------------------------------------- | ------------------------ |
+| **Load Time**       | 65-90 seconds ❌                         | <1 second ✅             |
+| **API Calls**       | 16,105 calls (5 layers × 3,221 counties) | 0 calls                  |
+| **Rate Limits**     | Exceeds 10,000/day limit ❌              | No limits ✅             |
+| **Browser Timeout** | 30-60 seconds ❌                         | Never times out ✅       |
+| **User Experience** | Frustrating wait ❌                      | Instant visualization ✅ |
 
 **Conclusion:** Sample data is the **only viable option** for map layers.
 
@@ -109,6 +115,7 @@ This architecture ensures optimal user experience while maintaining data accurac
 ## 🌐 **Tier 2: County Dashboard (Real Data)**
 
 ### **What It Does**
+
 - Opens when user clicks on any county
 - Fetches real-time data from government APIs
 - Provides accurate, up-to-date information for decision-making
@@ -116,24 +123,28 @@ This architecture ensures optimal user experience while maintaining data accurac
 ### **Dashboard Features**
 
 #### 1. ⚡ **Weather Alerts** (NOAA NWS API)
+
 - **API:** `https://api.weather.gov/alerts/active`
 - **Data:** Active weather warnings, watches, advisories
 - **Status:** ✅ Real data
 - **API Key:** Not required
 
 #### 2. 🌪️ **Severe Weather** (NOAA HRRR Model)
+
 - **API:** `https://mesonet.agron.iastate.edu/api/1/sounding.json`
 - **Data:** Atmospheric sounding, severe weather indices (CAPE, SRH, etc.)
 - **Status:** ⚠️ Real data with fallback
 - **API Key:** Not required
 
 #### 3. 💨 **Air Quality** (EPA AirNow API)
+
 - **API:** `https://www.airnowapi.org/aq/observation/latLong/current/`
 - **Data:** Real-time AQI for O3, PM2.5, PM10, NO2, SO2, CO
 - **Status:** ✅ Real data
 - **API Key:** Required (configured in `.env`)
 
 #### 4. 📈 **Climate Trends** (Open-Meteo Archive API)
+
 - **API:** `https://archive-api.open-meteo.com/v1/archive`
 - **Data:** 55 years of historical temperature data (1970-2025)
 - **Analysis:** Linear regression, Mann-Kendall test, change point detection
@@ -141,6 +152,7 @@ This architecture ensures optimal user experience while maintaining data accurac
 - **API Key:** Not required
 
 ### **Performance**
+
 - **Load Time:** 2-5 seconds per county
 - **API Calls:** 4 calls per county (parallel execution)
 - **Cache Duration:** Varies by feature (1-24 hours)
@@ -148,13 +160,13 @@ This architecture ensures optimal user experience while maintaining data accurac
 
 ### **Why Real Data?**
 
-| Metric | Sample Data | Real-Time API |
-|--------|-------------|---------------|
-| **Accuracy** | Approximate ❌ | Government-verified ✅ |
-| **Timeliness** | Static ❌ | Real-time ✅ |
-| **Trust** | Low ❌ | High ✅ |
-| **Decision-Making** | Not reliable ❌ | Reliable ✅ |
-| **Load Time** | Instant ✅ | 2-5 seconds ✅ |
+| Metric              | Sample Data     | Real-Time API          |
+| ------------------- | --------------- | ---------------------- |
+| **Accuracy**        | Approximate ❌  | Government-verified ✅ |
+| **Timeliness**      | Static ❌       | Real-time ✅           |
+| **Trust**           | Low ❌          | High ✅                |
+| **Decision-Making** | Not reliable ❌ | Reliable ✅            |
+| **Load Time**       | Instant ✅      | 2-5 seconds ✅         |
 
 **Conclusion:** Real data is **essential** for county-level details.
 
@@ -208,12 +220,14 @@ This architecture ensures optimal user experience while maintaining data accurac
 ## 📈 **Performance Metrics**
 
 ### **Map View (Sample Data)**
+
 - **Initial Load:** <1 second
 - **Layer Switch:** <1 second (cached) or <1 second (database query)
 - **Pan/Zoom:** Instant (client-side rendering)
 - **Memory Usage:** ~50MB (3,221 counties in memory)
 
 ### **County Dashboard (Real Data)**
+
 - **Initial Load:** 2-5 seconds (4 parallel API calls)
 - **Tab Switch:** Instant (data already loaded)
 - **Refresh:** 2-5 seconds (re-fetches from APIs)
@@ -226,6 +240,7 @@ This architecture ensures optimal user experience while maintaining data accurac
 ### **Why Not Real Data for Map Layers?**
 
 **Attempted Implementation:**
+
 - Tried fetching real-time data from Open-Meteo API for all counties
 - Result: 65-90 second load times, browser timeouts, exceeded rate limits
 - Conclusion: Not viable for production
@@ -235,6 +250,7 @@ This architecture ensures optimal user experience while maintaining data accurac
 ### **Why Not Sample Data for County Dashboard?**
 
 **User Needs:**
+
 - Farmers, researchers, and decision-makers need **accurate** data
 - Sample data is not reliable for critical decisions
 - Real government data builds trust and credibility
@@ -262,10 +278,10 @@ See `docs/REAL_DATA_SOURCES.md` for three potential solutions:
 
 ### **The Perfect Balance**
 
-| Component | Data Type | Performance | Accuracy | User Experience |
-|-----------|-----------|-------------|----------|-----------------|
-| **Map Layers** | Sample | ✅ Excellent | ⚠️ Approximate | ✅ Instant exploration |
-| **County Dashboard** | Real | ✅ Good | ✅ Verified | ✅ Accurate details |
+| Component            | Data Type | Performance  | Accuracy       | User Experience        |
+| -------------------- | --------- | ------------ | -------------- | ---------------------- |
+| **Map Layers**       | Sample    | ✅ Excellent | ⚠️ Approximate | ✅ Instant exploration |
+| **County Dashboard** | Real      | ✅ Good      | ✅ Verified    | ✅ Accurate details    |
 
 ### **Key Takeaways**
 
@@ -276,6 +292,5 @@ See `docs/REAL_DATA_SOURCES.md` for three potential solutions:
 
 ---
 
-**Last Updated:** 2025-11-06  
+**Last Updated:** January 6, 2025
 **Status:** Production-ready ✅
-
