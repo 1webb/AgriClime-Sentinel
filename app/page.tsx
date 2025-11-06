@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import dynamic from "next/dynamic";
+import { Menu, X } from "lucide-react";
 import { MapDataLayer, CropType } from "@/types";
 import LayerSelector from "@/components/Map/LayerSelector";
 import MapLegend from "@/components/Map/MapLegend";
@@ -39,6 +40,7 @@ export default function Home() {
   const [dashboardType, setDashboardType] = useState<
     "agricultural" | "atmospheric"
   >("atmospheric");
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   /**
    * Handle county click with optimized single-county fetch
@@ -147,10 +149,58 @@ export default function Home() {
       </header>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
-        {/* Sidebar - Removed max-h restriction on mobile for full scrollability */}
-        <aside className="w-full md:w-72 lg:w-80 bg-gray-50 p-3 sm:p-4 overflow-y-auto border-b md:border-b-0 md:border-r border-gray-200">
+      <div className="flex-1 flex flex-col md:flex-row overflow-hidden relative">
+        {/* Mobile Sidebar Toggle Button - Fixed position on map */}
+        <button
+          onClick={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
+          className="md:hidden fixed top-20 left-4 z-[1000] bg-blue-600 text-white p-3 rounded-full shadow-2xl hover:bg-blue-700 transition-all duration-200 flex items-center gap-2"
+          aria-label="Toggle sidebar"
+        >
+          {isMobileSidebarOpen ? (
+            <X size={24} />
+          ) : (
+            <>
+              <Menu size={24} />
+              <span className="text-xs font-bold">Controls</span>
+            </>
+          )}
+        </button>
+
+        {/* Backdrop for mobile sidebar */}
+        {isMobileSidebarOpen && (
+          <div
+            className="md:hidden fixed inset-0 bg-black bg-opacity-50 z-[998]"
+            onClick={() => setIsMobileSidebarOpen(false)}
+          />
+        )}
+
+        {/* Sidebar - Slide-in on mobile, always visible on desktop */}
+        <aside
+          className={`
+            fixed md:relative
+            top-0 left-0
+            h-full md:h-auto
+            w-80 md:w-72 lg:w-80
+            bg-gray-50 p-3 sm:p-4
+            overflow-y-auto
+            border-r border-gray-200
+            z-[999] md:z-auto
+            transform transition-transform duration-300 ease-in-out
+            ${isMobileSidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
+          `}
+        >
           <div className="space-y-3 sm:space-y-4">
+            {/* Close button for mobile */}
+            <div className="md:hidden flex justify-between items-center mb-4">
+              <h2 className="text-lg font-bold text-gray-900">Map Controls</h2>
+              <button
+                onClick={() => setIsMobileSidebarOpen(false)}
+                className="text-gray-600 hover:text-gray-900 p-2"
+                aria-label="Close sidebar"
+              >
+                <X size={24} />
+              </button>
+            </div>
             {/* County Search */}
             <div className="bg-white p-3 sm:p-4 rounded-lg shadow">
               <h3 className="font-bold mb-2 text-sm sm:text-base text-gray-900">
@@ -223,8 +273,8 @@ export default function Home() {
           </div>
         </aside>
 
-        {/* Map Container */}
-        <main className="flex-1 relative min-h-[60vh] md:min-h-0">
+        {/* Map Container - Full height on mobile */}
+        <main className="flex-1 relative h-full md:min-h-0">
           <CountyMap
             layer={selectedLayer}
             cropType={selectedCrop}
