@@ -6,7 +6,10 @@ import { RegionalDashboardData } from "@/types";
 /**
  * Export dashboard data to CSV format
  */
-export function exportToCSV(data: RegionalDashboardData, filename: string = "climate-data.csv") {
+export function exportToCSV(
+  data: RegionalDashboardData,
+  filename: string = "climate-data.csv"
+) {
   const csvData = [
     // Header
     ["AgriClime Sentinel - Climate Data Export"],
@@ -17,30 +20,63 @@ export function exportToCSV(data: RegionalDashboardData, filename: string = "cli
     ["FIPS Code", data.county.fips],
     [""],
     ["Current Climate Conditions"],
-    ["Temperature (°C)", data.current_climate?.temperature_avg?.toFixed(2) || "N/A"],
-    ["Max Temperature (°C)", data.current_climate?.temperature_max?.toFixed(2) || "N/A"],
-    ["Min Temperature (°C)", data.current_climate?.temperature_min?.toFixed(2) || "N/A"],
-    ["Precipitation (mm)", data.current_climate?.precipitation?.toFixed(2) || "N/A"],
-    ["Soil Moisture (%)", data.current_climate?.soil_moisture?.toFixed(2) || "N/A"],
+    [
+      "Temperature (°C)",
+      data.current_climate?.temperature_avg?.toFixed(2) || "N/A",
+    ],
+    [
+      "Max Temperature (°C)",
+      data.current_climate?.temperature_max?.toFixed(2) || "N/A",
+    ],
+    [
+      "Min Temperature (°C)",
+      data.current_climate?.temperature_min?.toFixed(2) || "N/A",
+    ],
+    [
+      "Precipitation (mm)",
+      data.current_climate?.precipitation?.toFixed(2) || "N/A",
+    ],
+    [
+      "Soil Moisture (%)",
+      data.current_climate?.soil_moisture?.toFixed(2) || "N/A",
+    ],
     ["Drought Index", data.current_climate?.drought_index?.toFixed(2) || "N/A"],
     [""],
     ["Agricultural Metrics"],
-    ["Growing Degree Days (YTD)", data.growing_degree_days?.toString() || "N/A"],
-    ["Extreme Heat Days (YTD)", data.extreme_heat_days_ytd?.toString() || "N/A"],
+    [
+      "Growing Degree Days (YTD)",
+      data.growing_degree_days?.toString() || "N/A",
+    ],
+    [
+      "Extreme Heat Days (YTD)",
+      data.extreme_heat_days_ytd?.toString() || "N/A",
+    ],
     [""],
     ["Precipitation Analysis"],
     ["Current (mm)", data.precipitation_vs_avg?.current?.toFixed(2) || "N/A"],
-    ["Historical Average (mm)", data.precipitation_vs_avg?.historical_avg?.toFixed(2) || "N/A"],
-    ["Difference (%)", data.precipitation_vs_avg?.percent_difference?.toFixed(2) || "N/A"],
+    [
+      "Historical Average (mm)",
+      data.precipitation_vs_avg?.historical_avg?.toFixed(2) || "N/A",
+    ],
+    [
+      "Difference (%)",
+      data.precipitation_vs_avg?.percent_difference?.toFixed(2) || "N/A",
+    ],
     [""],
     ["Historical Trends (Last 10 Years)"],
-    ["Year", "Drought Frequency", "Drought Severity", "Extreme Heat Days", "Precipitation (mm)"],
+    [
+      "Year",
+      "Drought Frequency",
+      "Drought Severity",
+      "Extreme Heat Days",
+      "Precipitation (mm)",
+    ],
   ];
 
   // Add historical trends
   if (data.historical_trends && data.historical_trends.length > 0) {
     const recentTrends = data.historical_trends.slice(-10);
-    recentTrends.forEach(trend => {
+    recentTrends.forEach((trend) => {
       csvData.push([
         trend.year.toString(),
         trend.drought_frequency.toString(),
@@ -54,7 +90,10 @@ export function exportToCSV(data: RegionalDashboardData, filename: string = "cli
   csvData.push(
     [""],
     ["Export Date", new Date().toISOString()],
-    ["Source", "AgriClime Sentinel - https://github.com/clevernat/AgriClime-Sentinel"]
+    [
+      "Source",
+      "AgriClime Sentinel - https://github.com/clevernat/AgriClime-Sentinel",
+    ]
   );
 
   const csv = Papa.unparse(csvData);
@@ -72,14 +111,20 @@ export async function exportToPDF(
   try {
     const element = document.getElementById(elementId);
     if (!element) {
-      throw new Error("Element not found");
+      throw new Error(
+        `Element with ID "${elementId}" not found. Please make sure the dashboard is fully loaded.`
+      );
     }
 
-    // Capture the element as canvas
+    // Capture the element as canvas with improved settings
     const canvas = await html2canvas(element, {
       scale: 2,
       logging: false,
       useCORS: true,
+      allowTaint: true,
+      backgroundColor: "#ffffff",
+      windowWidth: element.scrollWidth,
+      windowHeight: element.scrollHeight,
     });
 
     const imgData = canvas.toDataURL("image/png");
@@ -119,7 +164,11 @@ export async function exportToPDF(
     pdf.save(filename);
   } catch (error) {
     console.error("Error generating PDF:", error);
-    throw error;
+    throw new Error(
+      `Failed to export PDF: ${
+        error instanceof Error ? error.message : "Unknown error"
+      }`
+    );
   }
 }
 
@@ -203,13 +252,14 @@ export function exportAtmosphericDataToCSV(
 
   // Severe Weather Indices
   if (data.severeWeather) {
-    csvData.push(
-      ["Severe Weather Indices"],
-      ["Index", "Value", "Category"]
-    );
+    csvData.push(["Severe Weather Indices"], ["Index", "Value", "Category"]);
     const indices = data.severeWeather.indices || data.severeWeather;
     if (indices.cape !== undefined) {
-      csvData.push(["CAPE", indices.cape.toFixed(0), indices.cape_category || ""]);
+      csvData.push([
+        "CAPE",
+        indices.cape.toFixed(0),
+        indices.cape_category || "",
+      ]);
     }
     if (indices.k_index !== undefined) {
       csvData.push(["K-Index", indices.k_index.toFixed(1), ""]);
@@ -243,10 +293,7 @@ export function exportAtmosphericDataToCSV(
 
   // Climate Trends
   if (data.climateTrends && data.climateTrends.data) {
-    csvData.push(
-      ["Climate Trends"],
-      ["Year", "Value"]
-    );
+    csvData.push(["Climate Trends"], ["Year", "Value"]);
     data.climateTrends.data.forEach((point: any) => {
       csvData.push([point.year.toString(), point.value.toFixed(2)]);
     });
@@ -255,7 +302,10 @@ export function exportAtmosphericDataToCSV(
 
   csvData.push(
     [""],
-    ["Source", "AgriClime Sentinel - https://github.com/clevernat/AgriClime-Sentinel"]
+    [
+      "Source",
+      "AgriClime Sentinel - https://github.com/clevernat/AgriClime-Sentinel",
+    ]
   );
 
   const csv = Papa.unparse(csvData);
@@ -284,4 +334,3 @@ export function generateFilename(prefix: string, extension: string): string {
   const timestamp = new Date().toISOString().split("T")[0];
   return `${prefix}_${timestamp}.${extension}`;
 }
-

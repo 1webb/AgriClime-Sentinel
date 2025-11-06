@@ -2,7 +2,12 @@
 
 import { useState } from "react";
 import { Download, FileText, FileSpreadsheet, Image } from "lucide-react";
-import { exportToCSV, exportToPDF, exportChartAsPNG, generateFilename } from "@/lib/utils/export";
+import {
+  exportToCSV,
+  exportToPDF,
+  exportChartAsPNG,
+  generateFilename,
+} from "@/lib/utils/export";
 import { RegionalDashboardData } from "@/types";
 
 interface ExportButtonsProps {
@@ -25,7 +30,9 @@ export default function ExportButtons({
     try {
       setIsExporting(true);
       const filename = generateFilename(
-        `${data.county.name.replace(/\s+/g, "-")}_${data.county.state}_climate-data`,
+        `${data.county.name.replace(/\s+/g, "-")}_${
+          data.county.state
+        }_climate-data`,
         "csv"
       );
       exportToCSV(data, filename);
@@ -41,14 +48,27 @@ export default function ExportButtons({
   const handleExportPDF = async () => {
     try {
       setIsExporting(true);
+
+      // Wait a bit for any animations to complete
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
       const filename = generateFilename(
-        `${data.county.name.replace(/\s+/g, "-")}_${data.county.state}_climate-report`,
+        `${data.county.name.replace(/\s+/g, "-")}_${
+          data.county.state
+        }_climate-report`,
         "pdf"
       );
       await exportToPDF(dashboardElementId, data, filename);
+
+      // Success feedback
+      alert("PDF exported successfully!");
     } catch (error) {
       console.error("Export error:", error);
-      alert("Failed to export PDF. Please try again.");
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error occurred";
+      alert(
+        `Failed to export PDF:\n\n${errorMessage}\n\nPlease try again or use CSV export instead.`
+      );
     } finally {
       setIsExporting(false);
       setShowMenu(false);
@@ -146,9 +166,7 @@ export default function ExportButtons({
                     <div className="text-sm font-medium text-gray-900">
                       Export Chart
                     </div>
-                    <div className="text-xs text-gray-500">
-                      PNG image
-                    </div>
+                    <div className="text-xs text-gray-500">PNG image</div>
                   </div>
                 </button>
               )}
@@ -166,4 +184,3 @@ export default function ExportButtons({
     </div>
   );
 }
-

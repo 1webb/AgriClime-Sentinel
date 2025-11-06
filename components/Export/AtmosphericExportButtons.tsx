@@ -2,7 +2,11 @@
 
 import { useState } from "react";
 import { Download, FileSpreadsheet, FileText } from "lucide-react";
-import { exportAtmosphericDataToCSV, exportToPDF, generateFilename } from "@/lib/utils/export";
+import {
+  exportAtmosphericDataToCSV,
+  exportToPDF,
+  generateFilename,
+} from "@/lib/utils/export";
 
 interface AtmosphericExportButtonsProps {
   countyName: string;
@@ -45,9 +49,15 @@ export default function AtmosphericExportButtons({
   const handleExportPDF = async () => {
     try {
       setIsExporting(true);
+
+      // Wait a bit for any animations to complete
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
       const element = document.getElementById(dashboardElementId);
       if (!element) {
-        throw new Error("Dashboard element not found");
+        throw new Error(
+          "Dashboard element not found. Please make sure the dashboard is fully loaded."
+        );
       }
 
       const filename = generateFilename(
@@ -62,13 +72,24 @@ export default function AtmosphericExportButtons({
         historical_trends: [],
         growing_degree_days: 0,
         extreme_heat_days_ytd: 0,
-        precipitation_vs_avg: { current: 0, historical_avg: 0, percent_difference: 0 },
+        precipitation_vs_avg: {
+          current: 0,
+          historical_avg: 0,
+          percent_difference: 0,
+        },
       };
 
       await exportToPDF(dashboardElementId, pdfData, filename);
+
+      // Success feedback
+      alert("PDF exported successfully!");
     } catch (error) {
       console.error("Export error:", error);
-      alert("Failed to export PDF. Please try again.");
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error occurred";
+      alert(
+        `Failed to export PDF:\n\n${errorMessage}\n\nPlease try again or use CSV export instead.`
+      );
     } finally {
       setIsExporting(false);
       setShowMenu(false);
@@ -146,4 +167,3 @@ export default function AtmosphericExportButtons({
     </div>
   );
 }
-
