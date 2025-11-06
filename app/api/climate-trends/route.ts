@@ -8,6 +8,12 @@ import {
   detectChangePoints,
   type ClimateTrendData,
 } from "@/lib/api/climate-trends";
+import {
+  rateLimit,
+  RateLimitPresets,
+  createRateLimitResponse,
+  addRateLimitHeaders,
+} from "@/lib/middleware/rate-limit";
 
 /**
  * Generate realistic climate trend data based on climate science
@@ -215,8 +221,18 @@ async function fetchHistoricalClimateData(
  * - endYear: End year for analysis (optional, default: current year)
  *
  * Returns climate trend analysis with statistical significance
+ *
+ * Rate limit: 60 requests per minute
  */
 export async function GET(request: NextRequest) {
+  // Apply rate limiting
+  const limiter = rateLimit(RateLimitPresets.standard);
+  const rateLimitResult = limiter(request);
+
+  if (!rateLimitResult.isAllowed) {
+    return createRateLimitResponse(rateLimitResult);
+  }
+
   try {
     const searchParams = request.nextUrl.searchParams;
     const fips = searchParams.get("fips");
@@ -328,6 +344,8 @@ export async function GET(request: NextRequest) {
       movingAverage,
       changePoints,
     });
+
+    return addRateLimitHeaders(jsonResponse, rateLimitResult);
   } catch {
     return NextResponse.json(
       { error: "Failed to analyze climate trends" },

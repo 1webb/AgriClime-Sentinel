@@ -7,6 +7,12 @@ import {
   getHealthRecommendations,
   getAQICategory,
 } from "@/lib/api/air-quality";
+import {
+  rateLimit,
+  RateLimitPresets,
+  createRateLimitResponse,
+  addRateLimitHeaders,
+} from "@/lib/middleware/rate-limit";
 
 /**
  * GET /api/air-quality
@@ -19,8 +25,18 @@ import {
  * - date: Forecast date in YYYY-MM-DD format (optional, defaults to today)
  *
  * Returns air quality data from EPA AirNow API
+ *
+ * Rate limit: 60 requests per minute
  */
 export async function GET(request: NextRequest) {
+  // Apply rate limiting
+  const limiter = rateLimit(RateLimitPresets.standard);
+  const rateLimitResult = limiter(request);
+
+  if (!rateLimitResult.isAllowed) {
+    return createRateLimitResponse(rateLimitResult);
+  }
+
   try {
     const searchParams = request.nextUrl.searchParams;
     const lat = searchParams.get("lat");
@@ -108,13 +124,15 @@ export async function GET(request: NextRequest) {
         const overall = calculateOverallAQI(observations);
         const recommendations = getHealthRecommendations(overall.aqi);
 
-        return NextResponse.json({
+        const response = NextResponse.json({
           success: true,
           location: { latitude, longitude },
           overall,
           recommendations,
           observations: enrichedObservations,
         });
+
+        return addRateLimitHeaders(response, rateLimitResult);
       }
     }
 
@@ -122,8 +140,7 @@ export async function GET(request: NextRequest) {
       { error: "Please provide either lat/lon or zip code" },
       { status: 400 }
     );
-  } catch (error) {
-    console.error("Error in air quality API:", error);
+  } catch {
     return NextResponse.json(
       { error: "Failed to fetch air quality data" },
       { status: 500 }

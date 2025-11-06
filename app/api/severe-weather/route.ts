@@ -1,5 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
+  rateLimit,
+  RateLimitPresets,
+  createRateLimitResponse,
+  addRateLimitHeaders,
+} from "@/lib/middleware/rate-limit";
+import {
   calculateSevereWeatherIndices,
   generateSampleSounding,
   type AtmosphericSounding,
@@ -100,8 +106,18 @@ async function fetchNOAASounding(
  *
  * Returns severe weather indices and tornado/thunderstorm potential
  * Uses real-time NOAA HRRR model data and weather balloon observations
+ *
+ * Rate limit: 60 requests per minute
  */
 export async function GET(request: NextRequest) {
+  // Apply rate limiting
+  const limiter = rateLimit(RateLimitPresets.standard);
+  const rateLimitResult = limiter(request);
+
+  if (!rateLimitResult.isAllowed) {
+    return createRateLimitResponse(rateLimitResult);
+  }
+
   try {
     const searchParams = request.nextUrl.searchParams;
     const latStr = searchParams.get("lat");
@@ -147,7 +163,8 @@ export async function GET(request: NextRequest) {
       };
     }
 
-    return NextResponse.json(response);
+    const jsonResponse = NextResponse.json(response);
+    return addRateLimitHeaders(jsonResponse, rateLimitResult);
   } catch {
     return NextResponse.json(
       { error: "Failed to calculate severe weather indices" },
@@ -162,8 +179,18 @@ export async function GET(request: NextRequest) {
  * Body: AtmosphericSounding object
  *
  * Allows custom atmospheric sounding data to be analyzed
+ *
+ * Rate limit: 60 requests per minute
  */
 export async function POST(request: NextRequest) {
+  // Apply rate limiting
+  const limiter = rateLimit(RateLimitPresets.standard);
+  const rateLimitResult = limiter(request);
+
+  if (!rateLimitResult.isAllowed) {
+    return createRateLimitResponse(rateLimitResult);
+  }
+
   try {
     const sounding: AtmosphericSounding = await request.json();
 
@@ -180,11 +207,13 @@ export async function POST(request: NextRequest) {
 
     const indices = calculateSevereWeatherIndices(sounding);
 
-    return NextResponse.json({
+    const jsonResponse = NextResponse.json({
       success: true,
       indices,
       timestamp: new Date().toISOString(),
     });
+
+    return addRateLimitHeaders(jsonResponse, rateLimitResult);
   } catch {
     return NextResponse.json(
       { error: "Failed to calculate severe weather indices" },
