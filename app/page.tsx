@@ -260,11 +260,6 @@ export default function Home() {
               Data: NOAA, EPA, USDA, Open-Meteo
             </div>
 
-            {/* Tech Stack */}
-            <div className="text-center text-xs opacity-80">
-              Built with Next.js, PostgreSQL, Leaflet
-            </div>
-
             {/* Links */}
             <div className="flex justify-center gap-4 text-xs">
               <a
@@ -298,18 +293,12 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Center Section: Data Sources & Tech */}
-            <div className="flex-1 flex flex-col lg:flex-row gap-3 lg:gap-6 lg:justify-center">
+            {/* Center Section: Data Sources */}
+            <div className="flex-1 flex justify-center">
               <div className="text-xs">
                 <div className="font-semibold mb-1">Data Sources</div>
                 <div className="opacity-90">
                   NOAA • EPA AirNow • USDA • Open-Meteo
-                </div>
-              </div>
-              <div className="text-xs">
-                <div className="font-semibold mb-1">Technology</div>
-                <div className="opacity-90">
-                  Next.js 16 • PostgreSQL + PostGIS • Leaflet.js
                 </div>
               </div>
             </div>
