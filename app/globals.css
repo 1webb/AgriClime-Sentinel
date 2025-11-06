@@ -151,4 +151,18 @@ body {
     margin-bottom: 70px !important; /* Space for floating button */
     margin-right: 4px !important;
   }
+
+  /* Hide zoom controls when mobile sidebar is open */
+  .hide-mobile-zoom .leaflet-control-zoom {
+    opacity: 0 !important;
+    pointer-events: none !important;
+    transition: opacity 0.3s ease-in-out;
+  }
+
+  /* Show zoom controls when mobile sidebar is closed */
+  .leaflet-control-zoom {
+    opacity: 1;
+    pointer-events: auto;
+    transition: opacity 0.3s ease-in-out;
+  }
 }

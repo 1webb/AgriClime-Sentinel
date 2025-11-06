@@ -279,6 +279,7 @@ export default function Home() {
             layer={selectedLayer}
             cropType={selectedCrop}
             onCountyClick={handleCountyClick}
+            hideMobileZoomControls={isMobileSidebarOpen}
           />
         </main>
       </div>

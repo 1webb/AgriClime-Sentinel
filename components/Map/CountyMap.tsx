@@ -10,12 +10,14 @@ interface CountyMapProps {
   layer: MapDataLayer;
   cropType?: string;
   onCountyClick?: (fips: string) => void;
+  hideMobileZoomControls?: boolean;
 }
 
 export default function CountyMap({
   layer,
   cropType,
   onCountyClick,
+  hideMobileZoomControls = false,
 }: CountyMapProps) {
   const mapRef = useRef<L.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
@@ -295,6 +297,17 @@ export default function CountyMap({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [layer, cropType]);
+
+  // Toggle zoom controls visibility based on mobile sidebar state
+  useEffect(() => {
+    if (mapContainerRef.current) {
+      if (hideMobileZoomControls) {
+        mapContainerRef.current.classList.add("hide-mobile-zoom");
+      } else {
+        mapContainerRef.current.classList.remove("hide-mobile-zoom");
+      }
+    }
+  }, [hideMobileZoomControls]);
 
   return (
     <div className="relative w-full h-full">
