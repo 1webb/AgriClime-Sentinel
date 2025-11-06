@@ -94,285 +94,38 @@ export default function AtmosphericScienceDashboard({
         setWeatherAlerts(alertsData.alerts || []);
       }
 
-      // Process severe weather indices
-      if (severeData.success) {
+      // Process severe weather indices - REAL DATA ONLY
+      if (severeData.success && severeData.indices) {
         setSevereWeatherIndices(severeData.indices);
-        setSevereWeatherDataSource(severeData.dataSource || "sample");
+        setSevereWeatherDataSource(severeData.dataSource || "live");
       } else {
-        setSevereWeatherIndices(getSampleSevereWeatherData());
-        setSevereWeatherDataSource("sample");
+        setSevereWeatherIndices(null);
+        setSevereWeatherDataSource(null);
       }
 
-      // Process air quality
-      console.log("Air Quality API Response:", aqData);
+      // Process air quality - REAL DATA ONLY
       if (aqData.success && aqData.overall) {
-        console.log("Air Quality Observations:", aqData.observations);
         setAirQuality(aqData);
       } else {
-        setAirQuality(getSampleAirQualityData());
+        setAirQuality(null);
       }
 
-      // Process climate trends
+      // Process climate trends - REAL DATA ONLY
       if (trendsData.success && trendsData.trend) {
         setClimateTrends(trendsData);
       } else {
-        setClimateTrends(getSampleClimateTrendsData());
+        setClimateTrends(null);
       }
     } catch (error) {
       console.error("Error fetching atmospheric data:", error);
-      // Set sample data on error
-      setSevereWeatherIndices(getSampleSevereWeatherData());
-      setSevereWeatherDataSource("sample");
-      setAirQuality(getSampleAirQualityData());
-      setClimateTrends(getSampleClimateTrendsData());
+      // Set null on error - no sample data
+      setSevereWeatherIndices(null);
+      setSevereWeatherDataSource(null);
+      setAirQuality(null);
+      setClimateTrends(null);
     } finally {
       setLoading(false);
     }
-  };
-
-  // Sample data generators - now dynamic based on location
-  const getSampleSevereWeatherData = () => {
-    // Use latitude and longitude to generate pseudo-random but consistent data
-    const seed = Math.abs(latitude * 1000 + longitude * 100);
-    const random = (min: number, max: number, offset: number = 0) => {
-      const val = ((seed + offset) * 9301 + 49297) % 233280;
-      return min + (val / 233280) * (max - min);
-    };
-
-    const cape = Math.round(random(0, 3000, 1));
-    const cin = Math.round(random(-150, -10, 2));
-    const liftedIndex = parseFloat(random(-6, 4, 3).toFixed(1));
-    const kIndex = Math.round(random(15, 40, 4));
-    const totalTotals = Math.round(random(35, 60, 5));
-    const showalterIndex = parseFloat(random(-4, 2, 6).toFixed(1));
-    const bulkShear = parseFloat(random(5, 35, 7).toFixed(1));
-    const helicity = Math.round(random(50, 400, 8));
-    const stp = parseFloat(random(0, 5, 9).toFixed(1));
-    const scp = parseFloat(random(0, 10, 10).toFixed(1));
-
-    // Determine potentials based on values
-    const getTornadoPotential = (stp: number) => {
-      if (stp > 3) return "High";
-      if (stp > 1.5) return "Moderate";
-      if (stp > 0.5) return "Low";
-      return "Minimal";
-    };
-
-    const getThunderstormPotential = (cape: number, kIndex: number) => {
-      if (cape > 2000 && kIndex > 30) return "High";
-      if (cape > 1000 && kIndex > 25) return "Moderate";
-      if (cape > 500) return "Low";
-      return "Minimal";
-    };
-
-    const getHailPotential = (cape: number, shear: number) => {
-      if (cape > 2000 && shear > 25) return "High";
-      if (cape > 1000 && shear > 15) return "Moderate";
-      if (cape > 500) return "Low";
-      return "Minimal";
-    };
-
-    return {
-      cape,
-      cin,
-      liftedIndex,
-      kIndex,
-      totalTotals,
-      showalterIndex,
-      bulkShear0to6km: bulkShear,
-      stormRelativeHelicity0to3km: helicity,
-      significantTornadoParameter: stp,
-      supercellCompositeParameter: scp,
-      tornadoPotential: getTornadoPotential(stp),
-      severeThunderstormPotential: getThunderstormPotential(cape, kIndex),
-      hailPotential: getHailPotential(cape, bulkShear),
-    };
-  };
-
-  const getSampleAirQualityData = () => {
-    // Use latitude and longitude to generate pseudo-random but consistent data
-    const seed = Math.abs(latitude * 1000 + longitude * 100);
-    const random = (min: number, max: number, offset: number = 0) => {
-      const val = ((seed + offset) * 9301 + 49297) % 233280;
-      return min + (val / 233280) * (max - min);
-    };
-
-    const getAQICategory = (aqi: number) => {
-      if (aqi <= 50) return { number: 1, name: "Good", color: "#00E400" };
-      if (aqi <= 100) return { number: 2, name: "Moderate", color: "#F59E0B" };
-      if (aqi <= 150)
-        return {
-          number: 3,
-          name: "Unhealthy for Sensitive Groups",
-          color: "#FF7E00",
-        };
-      if (aqi <= 200) return { number: 4, name: "Unhealthy", color: "#FF0000" };
-      if (aqi <= 300)
-        return { number: 5, name: "Very Unhealthy", color: "#8F3F97" };
-      return { number: 6, name: "Hazardous", color: "#7E0023" };
-    };
-
-    const pm25 = Math.round(random(15, 85, 1));
-    const pm10 = Math.round(random(20, 90, 2));
-    const o3 = Math.round(random(10, 75, 3));
-    const no2 = Math.round(random(5, 60, 4));
-    const so2 = Math.round(random(5, 50, 5));
-    const co = Math.round(random(10, 65, 6));
-
-    const overallAQI = Math.max(pm25, pm10, o3, no2, so2, co);
-    const category = getAQICategory(overallAQI);
-
-    const pollutants = [
-      { name: "PM2.5", aqi: pm25 },
-      { name: "PM10", aqi: pm10 },
-      { name: "O3", aqi: o3 },
-      { name: "NO2", aqi: no2 },
-      { name: "SO2", aqi: so2 },
-      { name: "CO", aqi: co },
-    ];
-
-    const dominantPollutant = pollutants.reduce((max, p) =>
-      p.aqi > max.aqi ? p : max
-    ).name;
-
-    const getRecommendations = (aqi: number) => {
-      if (aqi <= 50) {
-        return {
-          general:
-            "Air quality is satisfactory, and air pollution poses little or no risk.",
-          sensitiveGroups: "It's a great day to be active outside.",
-          activities: "Enjoy your usual outdoor activities.",
-        };
-      } else if (aqi <= 100) {
-        return {
-          general:
-            "Air quality is acceptable. However, there may be a risk for some people.",
-          sensitiveGroups:
-            "Unusually sensitive people should consider limiting prolonged outdoor exertion.",
-          activities: "Most people can enjoy outdoor activities.",
-        };
-      } else if (aqi <= 150) {
-        return {
-          general: "Members of sensitive groups may experience health effects.",
-          sensitiveGroups:
-            "People with respiratory or heart conditions, children, and older adults should limit prolonged outdoor exertion.",
-          activities:
-            "Consider reducing intense outdoor activities if you experience symptoms.",
-        };
-      } else {
-        return {
-          general: "Everyone may begin to experience health effects.",
-          sensitiveGroups:
-            "People with respiratory or heart conditions, children, and older adults should avoid prolonged outdoor exertion.",
-          activities: "Everyone should limit prolonged outdoor exertion.",
-        };
-      }
-    };
-
-    return {
-      success: true,
-      overall: {
-        aqi: overallAQI,
-        category,
-        dominantPollutant,
-      },
-      observations: pollutants.map((p) => ({
-        parameterName: p.name,
-        aqi: p.aqi,
-        category: getAQICategory(p.aqi),
-      })),
-      recommendations: getRecommendations(overallAQI),
-    };
-  };
-
-  const getSampleClimateTrendsData = () => {
-    const startYear = 1970;
-    const endYear = 2024;
-    const years = endYear - startYear + 1;
-
-    // Use latitude to determine base temperature (warmer in south, cooler in north)
-    // Latitude ranges from ~25°N (south) to ~49°N (north) in continental US
-    const baseTemp = 25 - (latitude - 25) * 0.5; // Rough approximation
-
-    // Use longitude and latitude to determine trend slope
-    const seed = Math.abs(latitude * 1000 + longitude * 100);
-    const random = (min: number, max: number, offset: number = 0) => {
-      const val = ((seed + offset) * 9301 + 49297) % 233280;
-      return min + (val / 233280) * (max - min);
-    };
-
-    const trendSlope = parseFloat(random(0.01, 0.04, 1).toFixed(3)); // Warming trend varies by location
-
-    const data = [];
-    for (let i = 0; i < years; i++) {
-      const year = startYear + i;
-      const trend = trendSlope * i;
-      // Use seed-based random for consistent noise
-      const noiseVal = ((seed + i) * 9301 + 49297) % 233280;
-      const noise = (noiseVal / 233280 - 0.5) * 1.5;
-      const value = baseTemp + trend + noise;
-      data.push({ year, value: parseFloat(value.toFixed(2)) });
-    }
-
-    const totalChange =
-      ((data[data.length - 1].value - data[0].value) / data[0].value) * 100;
-
-    const rSquared = parseFloat(random(0.65, 0.92, 2).toFixed(2));
-    const pValue = parseFloat(random(0.001, 0.02, 3).toFixed(3));
-    const isSignificant = pValue < 0.05;
-
-    const recordHighs = Math.round(random(8, 18, 4));
-    const recordLows = Math.round(random(5, 12, 5));
-    const extremeHeatDays = Math.round(random(80, 200, 6));
-    const extremeColdDays = Math.round(random(40, 120, 7));
-    const extremePrecipDays = Math.round(random(40, 90, 8));
-    const heatWaves = Math.round(random(10, 25, 9));
-    const coldWaves = Math.round(random(5, 15, 10));
-
-    return {
-      success: true,
-      fips,
-      type: "temperature",
-      period: {
-        startYear,
-        endYear,
-        yearsAnalyzed: years,
-      },
-      trend: {
-        slope: trendSlope,
-        intercept: baseTemp,
-        rSquared,
-        pValue,
-        isSignificant,
-        trendDirection: trendSlope > 0 ? "Increasing" : "Decreasing",
-        percentChange: parseFloat(totalChange.toFixed(2)),
-        interpretation: isSignificant
-          ? `Temperature has ${
-              trendSlope > 0 ? "increased" : "decreased"
-            } significantly over the past ${years} years, showing a ${
-              trendSlope > 0 ? "warming" : "cooling"
-            } trend of ${Math.abs(trendSlope).toFixed(
-              3
-            )}°C per year. This trend is statistically significant (p < 0.05) and consistent with regional climate change patterns.`
-          : `Temperature data shows a ${
-              trendSlope > 0 ? "warming" : "cooling"
-            } trend of ${Math.abs(trendSlope).toFixed(
-              3
-            )}°C per year over the past ${years} years, but this trend is not statistically significant (p = ${pValue.toFixed(
-              3
-            )}).`,
-      },
-      data,
-      extremes: {
-        recordHighs,
-        recordLows,
-        extremeHeatDays,
-        extremeColdDays,
-        extremePrecipitationDays: extremePrecipDays,
-        heatWaves,
-        coldWaves,
-      },
-    };
   };
 
   const getSeverityColor = (severity: string) => {
@@ -574,274 +327,322 @@ export default function AtmosphericScienceDashboard({
           )}
 
           {/* Severe Weather Tab */}
-          {activeTab === "severe" && severeWeatherIndices && (
+          {activeTab === "severe" && (
             <div className="space-y-6">
               <h3 className="text-2xl font-bold text-gray-800 mb-4">
                 Severe Weather Analysis
               </h3>
 
-              {/* Threat Assessment */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-gradient-to-br from-orange-50 to-orange-100 border-2 border-orange-300 rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow">
-                  <div className="flex items-center justify-between mb-3">
-                    <Wind className="text-orange-600" size={32} />
-                    <span className="text-xs font-semibold text-orange-700 bg-orange-200 px-2 py-1 rounded-full">
-                      STP:{" "}
-                      {severeWeatherIndices.significantTornadoParameter.toFixed(
-                        2
-                      )}
-                    </span>
-                  </div>
-                  <h4 className="text-lg font-semibold text-gray-700 mb-2">
-                    Tornado Potential
+              {!severeWeatherIndices ? (
+                <div className="bg-gradient-to-br from-gray-50 to-gray-100 border-2 border-gray-300 rounded-xl p-12 text-center shadow-lg">
+                  <Wind className="mx-auto mb-4 text-gray-400" size={64} />
+                  <h4 className="text-2xl font-bold text-gray-700 mb-3">
+                    No Severe Weather Data Available
                   </h4>
-                  <p
-                    className={`text-4xl font-bold ${getPotentialColor(
-                      severeWeatherIndices.tornadoPotential
-                    )}`}
-                  >
-                    {severeWeatherIndices.tornadoPotential}
+                  <p className="text-gray-600 mb-4 max-w-2xl mx-auto">
+                    Real-time severe weather indices from NOAA's High-Resolution
+                    Rapid Refresh (HRRR) model are not currently available for
+                    this location.
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    Data Source: NOAA HRRR Model via Iowa State Mesonet API
                   </p>
                 </div>
+              ) : (
+                <>
+                  {/* Threat Assessment */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="bg-gradient-to-br from-orange-50 to-orange-100 border-2 border-orange-300 rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow">
+                      <div className="flex items-center justify-between mb-3">
+                        <Wind className="text-orange-600" size={32} />
+                        <span className="text-xs font-semibold text-orange-700 bg-orange-200 px-2 py-1 rounded-full">
+                          STP:{" "}
+                          {severeWeatherIndices.significantTornadoParameter.toFixed(
+                            2
+                          )}
+                        </span>
+                      </div>
+                      <h4 className="text-lg font-semibold text-gray-700 mb-2">
+                        Tornado Potential
+                      </h4>
+                      <p
+                        className={`text-4xl font-bold ${getPotentialColor(
+                          severeWeatherIndices.tornadoPotential
+                        )}`}
+                      >
+                        {severeWeatherIndices.tornadoPotential}
+                      </p>
+                    </div>
 
-                <div className="bg-gradient-to-br from-red-50 to-red-100 border-2 border-red-300 rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow">
-                  <div className="flex items-center justify-between mb-3">
-                    <Activity className="text-red-600" size={32} />
-                    <span className="text-xs font-semibold text-red-700 bg-red-200 px-2 py-1 rounded-full">
-                      SCP:{" "}
-                      {severeWeatherIndices.supercellCompositeParameter.toFixed(
-                        2
-                      )}
-                    </span>
+                    <div className="bg-gradient-to-br from-red-50 to-red-100 border-2 border-red-300 rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow">
+                      <div className="flex items-center justify-between mb-3">
+                        <Activity className="text-red-600" size={32} />
+                        <span className="text-xs font-semibold text-red-700 bg-red-200 px-2 py-1 rounded-full">
+                          SCP:{" "}
+                          {severeWeatherIndices.supercellCompositeParameter.toFixed(
+                            2
+                          )}
+                        </span>
+                      </div>
+                      <h4 className="text-lg font-semibold text-gray-700 mb-2">
+                        Severe Thunderstorm
+                      </h4>
+                      <p
+                        className={`text-4xl font-bold ${getPotentialColor(
+                          severeWeatherIndices.severeThunderstormPotential
+                        )}`}
+                      >
+                        {severeWeatherIndices.severeThunderstormPotential}
+                      </p>
+                    </div>
+
+                    <div className="bg-gradient-to-br from-purple-50 to-purple-100 border-2 border-purple-300 rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow">
+                      <div className="flex items-center justify-between mb-3">
+                        <Cloud className="text-purple-600" size={32} />
+                        <span className="text-xs font-semibold text-purple-700 bg-purple-200 px-2 py-1 rounded-full">
+                          CAPE: {severeWeatherIndices.cape.toFixed(0)} J/kg
+                        </span>
+                      </div>
+                      <h4 className="text-lg font-semibold text-gray-700 mb-2">
+                        Hail Potential
+                      </h4>
+                      <p
+                        className={`text-4xl font-bold ${getPotentialColor(
+                          severeWeatherIndices.hailPotential
+                        )}`}
+                      >
+                        {severeWeatherIndices.hailPotential}
+                      </p>
+                    </div>
                   </div>
-                  <h4 className="text-lg font-semibold text-gray-700 mb-2">
-                    Severe Thunderstorm
-                  </h4>
-                  <p
-                    className={`text-4xl font-bold ${getPotentialColor(
-                      severeWeatherIndices.severeThunderstormPotential
-                    )}`}
+
+                  {/* Atmospheric Indices Chart */}
+                  <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+                    <h4 className="text-xl font-bold text-gray-800 mb-4">
+                      Atmospheric Instability Indices
+                    </h4>
+                    <ResponsiveContainer width="100%" height={300}>
+                      <BarChart
+                        data={[
+                          {
+                            name: "CAPE",
+                            value: severeWeatherIndices.cape / 10,
+                            unit: "J/kg (÷10)",
+                            color: "#EF4444",
+                          },
+                          {
+                            name: "K-Index",
+                            value: severeWeatherIndices.kIndex,
+                            unit: "",
+                            color: "#F59E0B",
+                          },
+                          {
+                            name: "Total Totals",
+                            value: severeWeatherIndices.totalTotals,
+                            unit: "",
+                            color: "#10B981",
+                          },
+                          {
+                            name: "0-6km Shear",
+                            value: severeWeatherIndices.bulkShear0to6km,
+                            unit: "m/s",
+                            color: "#3B82F6",
+                          },
+                          {
+                            name: "0-3km SRH",
+                            value:
+                              severeWeatherIndices.stormRelativeHelicity0to3km /
+                              10,
+                            unit: "m²/s² (÷10)",
+                            color: "#8B5CF6",
+                          },
+                        ]}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="name" />
+                        <YAxis />
+                        <Tooltip
+                          content={({ active, payload }) => {
+                            if (active && payload && payload.length) {
+                              return (
+                                <div className="bg-white border border-gray-300 rounded-lg p-3 shadow-lg">
+                                  <p className="font-semibold text-gray-800">
+                                    {payload[0].payload.name}
+                                  </p>
+                                  <p className="text-gray-600">
+                                    Value: {payload[0].value?.toFixed(1)}{" "}
+                                    {payload[0].payload.unit}
+                                  </p>
+                                </div>
+                              );
+                            }
+                            return null;
+                          }}
+                        />
+                        <Bar
+                          dataKey="value"
+                          fill="#3B82F6"
+                          radius={[8, 8, 0, 0]}
+                        >
+                          {[
+                            { name: "CAPE", color: "#EF4444" },
+                            { name: "K-Index", color: "#F59E0B" },
+                            { name: "Total Totals", color: "#10B981" },
+                            { name: "0-6km Shear", color: "#3B82F6" },
+                            { name: "0-3km SRH", color: "#8B5CF6" },
+                          ].map((entry, index) => (
+                            <Bar key={`bar-${index}`} fill={entry.color} />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+
+                  {/* Detailed Indices Grid */}
+                  <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+                    <h4 className="text-xl font-bold text-gray-800 mb-4">
+                      Detailed Atmospheric Parameters
+                    </h4>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                      <div className="text-center p-4 bg-gradient-to-br from-red-50 to-white rounded-lg border border-red-100">
+                        <p className="text-sm text-gray-600 mb-1">CAPE</p>
+                        <p className="text-3xl font-bold text-red-600">
+                          {severeWeatherIndices.cape.toFixed(0)}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1">J/kg</p>
+                      </div>
+                      <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-white rounded-lg border border-blue-100">
+                        <p className="text-sm text-gray-600 mb-1">
+                          Lifted Index
+                        </p>
+                        <p className="text-3xl font-bold text-blue-600">
+                          {severeWeatherIndices.liftedIndex.toFixed(1)}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1">°C</p>
+                      </div>
+                      <div className="text-center p-4 bg-gradient-to-br from-green-50 to-white rounded-lg border border-green-100">
+                        <p className="text-sm text-gray-600 mb-1">K-Index</p>
+                        <p className="text-3xl font-bold text-green-600">
+                          {severeWeatherIndices.kIndex.toFixed(1)}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1">Index</p>
+                      </div>
+                      <div className="text-center p-4 bg-gradient-to-br from-yellow-50 to-white rounded-lg border border-yellow-100">
+                        <p className="text-sm text-gray-600 mb-1">
+                          Total Totals
+                        </p>
+                        <p className="text-3xl font-bold text-yellow-600">
+                          {severeWeatherIndices.totalTotals.toFixed(1)}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1">Index</p>
+                      </div>
+                      <div className="text-center p-4 bg-gradient-to-br from-indigo-50 to-white rounded-lg border border-indigo-100">
+                        <p className="text-sm text-gray-600 mb-1">
+                          0-6km Shear
+                        </p>
+                        <p className="text-3xl font-bold text-indigo-600">
+                          {severeWeatherIndices.bulkShear0to6km.toFixed(1)}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1">m/s</p>
+                      </div>
+                      <div className="text-center p-4 bg-gradient-to-br from-purple-50 to-white rounded-lg border border-purple-100">
+                        <p className="text-sm text-gray-600 mb-1">0-3km SRH</p>
+                        <p className="text-3xl font-bold text-purple-600">
+                          {severeWeatherIndices.stormRelativeHelicity0to3km.toFixed(
+                            0
+                          )}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1">m²/s²</p>
+                      </div>
+                      <div className="text-center p-4 bg-gradient-to-br from-pink-50 to-white rounded-lg border border-pink-100">
+                        <p className="text-sm text-gray-600 mb-1">STP</p>
+                        <p className="text-3xl font-bold text-pink-600">
+                          {severeWeatherIndices.significantTornadoParameter.toFixed(
+                            2
+                          )}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1">Parameter</p>
+                      </div>
+                      <div className="text-center p-4 bg-gradient-to-br from-orange-50 to-white rounded-lg border border-orange-100">
+                        <p className="text-sm text-gray-600 mb-1">SCP</p>
+                        <p className="text-3xl font-bold text-orange-600">
+                          {severeWeatherIndices.supercellCompositeParameter.toFixed(
+                            2
+                          )}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1">Parameter</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div
+                    className={`bg-gradient-to-r ${
+                      severeWeatherDataSource === "NOAA HRRR Model"
+                        ? "from-green-50 to-emerald-50 border-green-500"
+                        : "from-blue-50 to-indigo-50 border-blue-500"
+                    } border-l-4 rounded-lg p-4`}
                   >
-                    {severeWeatherIndices.severeThunderstormPotential}
-                  </p>
-                </div>
-
-                <div className="bg-gradient-to-br from-purple-50 to-purple-100 border-2 border-purple-300 rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow">
-                  <div className="flex items-center justify-between mb-3">
-                    <Cloud className="text-purple-600" size={32} />
-                    <span className="text-xs font-semibold text-purple-700 bg-purple-200 px-2 py-1 rounded-full">
-                      CAPE: {severeWeatherIndices.cape.toFixed(0)} J/kg
-                    </span>
-                  </div>
-                  <h4 className="text-lg font-semibold text-gray-700 mb-2">
-                    Hail Potential
-                  </h4>
-                  <p
-                    className={`text-4xl font-bold ${getPotentialColor(
-                      severeWeatherIndices.hailPotential
-                    )}`}
-                  >
-                    {severeWeatherIndices.hailPotential}
-                  </p>
-                </div>
-              </div>
-
-              {/* Atmospheric Indices Chart */}
-              <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
-                <h4 className="text-xl font-bold text-gray-800 mb-4">
-                  Atmospheric Instability Indices
-                </h4>
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart
-                    data={[
-                      {
-                        name: "CAPE",
-                        value: severeWeatherIndices.cape / 10,
-                        unit: "J/kg (÷10)",
-                        color: "#EF4444",
-                      },
-                      {
-                        name: "K-Index",
-                        value: severeWeatherIndices.kIndex,
-                        unit: "",
-                        color: "#F59E0B",
-                      },
-                      {
-                        name: "Total Totals",
-                        value: severeWeatherIndices.totalTotals,
-                        unit: "",
-                        color: "#10B981",
-                      },
-                      {
-                        name: "0-6km Shear",
-                        value: severeWeatherIndices.bulkShear0to6km,
-                        unit: "m/s",
-                        color: "#3B82F6",
-                      },
-                      {
-                        name: "0-3km SRH",
-                        value:
-                          severeWeatherIndices.stormRelativeHelicity0to3km / 10,
-                        unit: "m²/s² (÷10)",
-                        color: "#8B5CF6",
-                      },
-                    ]}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <Tooltip
-                      content={({ active, payload }) => {
-                        if (active && payload && payload.length) {
-                          return (
-                            <div className="bg-white border border-gray-300 rounded-lg p-3 shadow-lg">
-                              <p className="font-semibold text-gray-800">
-                                {payload[0].payload.name}
-                              </p>
-                              <p className="text-gray-600">
-                                Value: {payload[0].value?.toFixed(1)}{" "}
-                                {payload[0].payload.unit}
-                              </p>
-                            </div>
-                          );
-                        }
-                        return null;
-                      }}
-                    />
-                    <Bar dataKey="value" fill="#3B82F6" radius={[8, 8, 0, 0]}>
-                      {[
-                        { name: "CAPE", color: "#EF4444" },
-                        { name: "K-Index", color: "#F59E0B" },
-                        { name: "Total Totals", color: "#10B981" },
-                        { name: "0-6km Shear", color: "#3B82F6" },
-                        { name: "0-3km SRH", color: "#8B5CF6" },
-                      ].map((entry, index) => (
-                        <Bar key={`bar-${index}`} fill={entry.color} />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-
-              {/* Detailed Indices Grid */}
-              <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
-                <h4 className="text-xl font-bold text-gray-800 mb-4">
-                  Detailed Atmospheric Parameters
-                </h4>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                  <div className="text-center p-4 bg-gradient-to-br from-red-50 to-white rounded-lg border border-red-100">
-                    <p className="text-sm text-gray-600 mb-1">CAPE</p>
-                    <p className="text-3xl font-bold text-red-600">
-                      {severeWeatherIndices.cape.toFixed(0)}
-                    </p>
-                    <p className="text-xs text-gray-500 mt-1">J/kg</p>
-                  </div>
-                  <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-white rounded-lg border border-blue-100">
-                    <p className="text-sm text-gray-600 mb-1">Lifted Index</p>
-                    <p className="text-3xl font-bold text-blue-600">
-                      {severeWeatherIndices.liftedIndex.toFixed(1)}
-                    </p>
-                    <p className="text-xs text-gray-500 mt-1">°C</p>
-                  </div>
-                  <div className="text-center p-4 bg-gradient-to-br from-green-50 to-white rounded-lg border border-green-100">
-                    <p className="text-sm text-gray-600 mb-1">K-Index</p>
-                    <p className="text-3xl font-bold text-green-600">
-                      {severeWeatherIndices.kIndex.toFixed(1)}
-                    </p>
-                    <p className="text-xs text-gray-500 mt-1">Index</p>
-                  </div>
-                  <div className="text-center p-4 bg-gradient-to-br from-yellow-50 to-white rounded-lg border border-yellow-100">
-                    <p className="text-sm text-gray-600 mb-1">Total Totals</p>
-                    <p className="text-3xl font-bold text-yellow-600">
-                      {severeWeatherIndices.totalTotals.toFixed(1)}
-                    </p>
-                    <p className="text-xs text-gray-500 mt-1">Index</p>
-                  </div>
-                  <div className="text-center p-4 bg-gradient-to-br from-indigo-50 to-white rounded-lg border border-indigo-100">
-                    <p className="text-sm text-gray-600 mb-1">0-6km Shear</p>
-                    <p className="text-3xl font-bold text-indigo-600">
-                      {severeWeatherIndices.bulkShear0to6km.toFixed(1)}
-                    </p>
-                    <p className="text-xs text-gray-500 mt-1">m/s</p>
-                  </div>
-                  <div className="text-center p-4 bg-gradient-to-br from-purple-50 to-white rounded-lg border border-purple-100">
-                    <p className="text-sm text-gray-600 mb-1">0-3km SRH</p>
-                    <p className="text-3xl font-bold text-purple-600">
-                      {severeWeatherIndices.stormRelativeHelicity0to3km.toFixed(
-                        0
+                    <p
+                      className={`text-sm ${
+                        severeWeatherDataSource === "NOAA HRRR Model"
+                          ? "text-green-900"
+                          : "text-blue-900"
+                      }`}
+                    >
+                      <strong>📊 Data Source:</strong>{" "}
+                      {severeWeatherDataSource === "NOAA HRRR Model" ? (
+                        <>
+                          Real-time NOAA HRRR (High-Resolution Rapid Refresh)
+                          model data. HRRR is NOAA's 3km resolution atmospheric
+                          model that provides hourly updated forecasts and is
+                          used by the National Weather Service for severe
+                          weather prediction.
+                        </>
+                      ) : (
+                        <>
+                          <strong>Real-time NOAA HRRR Integration:</strong> This
+                          system is configured to fetch atmospheric sounding
+                          data from NOAA's High-Resolution Rapid Refresh (HRRR)
+                          model via the Iowa State Mesonet API. The API attempts
+                          to retrieve real-time model data for each location.
+                          Currently displaying calculated indices based on
+                          atmospheric profile data. HRRR provides 3km resolution
+                          forecasts updated hourly and is the same model used by
+                          the National Weather Service for severe weather
+                          forecasting.
+                        </>
                       )}
                     </p>
-                    <p className="text-xs text-gray-500 mt-1">m²/s²</p>
                   </div>
-                  <div className="text-center p-4 bg-gradient-to-br from-pink-50 to-white rounded-lg border border-pink-100">
-                    <p className="text-sm text-gray-600 mb-1">STP</p>
-                    <p className="text-3xl font-bold text-pink-600">
-                      {severeWeatherIndices.significantTornadoParameter.toFixed(
-                        2
-                      )}
-                    </p>
-                    <p className="text-xs text-gray-500 mt-1">Parameter</p>
-                  </div>
-                  <div className="text-center p-4 bg-gradient-to-br from-orange-50 to-white rounded-lg border border-orange-100">
-                    <p className="text-sm text-gray-600 mb-1">SCP</p>
-                    <p className="text-3xl font-bold text-orange-600">
-                      {severeWeatherIndices.supercellCompositeParameter.toFixed(
-                        2
-                      )}
-                    </p>
-                    <p className="text-xs text-gray-500 mt-1">Parameter</p>
-                  </div>
-                </div>
-              </div>
-
-              <div
-                className={`bg-gradient-to-r ${
-                  severeWeatherDataSource === "NOAA HRRR Model"
-                    ? "from-green-50 to-emerald-50 border-green-500"
-                    : "from-blue-50 to-indigo-50 border-blue-500"
-                } border-l-4 rounded-lg p-4`}
-              >
-                <p
-                  className={`text-sm ${
-                    severeWeatherDataSource === "NOAA HRRR Model"
-                      ? "text-green-900"
-                      : "text-blue-900"
-                  }`}
-                >
-                  <strong>📊 Data Source:</strong>{" "}
-                  {severeWeatherDataSource === "NOAA HRRR Model" ? (
-                    <>
-                      Real-time NOAA HRRR (High-Resolution Rapid Refresh) model
-                      data. HRRR is NOAA's 3km resolution atmospheric model that
-                      provides hourly updated forecasts and is used by the
-                      National Weather Service for severe weather prediction.
-                    </>
-                  ) : (
-                    <>
-                      <strong>Real-time NOAA HRRR Integration:</strong> This
-                      system is configured to fetch atmospheric sounding data
-                      from NOAA's High-Resolution Rapid Refresh (HRRR) model via
-                      the Iowa State Mesonet API. The API attempts to retrieve
-                      real-time model data for each location. Currently
-                      displaying calculated indices based on atmospheric profile
-                      data. HRRR provides 3km resolution forecasts updated
-                      hourly and is the same model used by the National Weather
-                      Service for severe weather forecasting.
-                    </>
-                  )}
-                </p>
-              </div>
+                </>
+              )}
             </div>
           )}
 
           {/* Air Quality Tab */}
-          {activeTab === "airquality" && airQuality && (
+          {activeTab === "airquality" && (
             <div className="space-y-6">
               <h3 className="text-2xl font-bold text-gray-800 mb-4">
                 Air Quality Analysis
               </h3>
 
-              {airQuality.overall && airQuality.overall.category ? (
+              {!airQuality || !airQuality.overall ? (
+                <div className="bg-gradient-to-br from-gray-50 to-gray-100 border-2 border-gray-300 rounded-xl p-12 text-center shadow-lg">
+                  <Cloud className="mx-auto mb-4 text-gray-400" size={64} />
+                  <h4 className="text-2xl font-bold text-gray-700 mb-3">
+                    No Air Quality Data Available
+                  </h4>
+                  <p className="text-gray-600 mb-4 max-w-2xl mx-auto">
+                    Real-time air quality measurements from EPA AirNow are not currently available for this location. Air quality monitoring stations may not be present in this area.
+                  </p>
+                  <p className="text-sm text-gray-500 mb-2">
+                    Data Source: EPA AirNow API
+                  </p>
+                  <p className="text-xs text-gray-400">
+                    Try selecting a county with a major city for real-time air quality data.
+                  </p>
+                </div>
+              ) : (
                 <>
                   {/* Overall AQI */}
                   <div className="bg-gradient-to-br from-white to-gray-50 border-2 border-gray-200 rounded-xl p-8 shadow-lg">
@@ -1050,13 +851,26 @@ export default function AtmosphericScienceDashboard({
           )}
 
           {/* Climate Trends Tab */}
-          {activeTab === "trends" && climateTrends && (
+          {activeTab === "trends" && (
             <div className="space-y-6">
               <h3 className="text-2xl font-bold text-gray-800 mb-4">
                 Climate Trend Analysis
               </h3>
 
-              {climateTrends.trend ? (
+              {!climateTrends || !climateTrends.trend ? (
+                <div className="bg-gradient-to-br from-gray-50 to-gray-100 border-2 border-gray-300 rounded-xl p-12 text-center shadow-lg">
+                  <TrendingUp className="mx-auto mb-4 text-gray-400" size={64} />
+                  <h4 className="text-2xl font-bold text-gray-700 mb-3">
+                    No Climate Trend Data Available
+                  </h4>
+                  <p className="text-gray-600 mb-4 max-w-2xl mx-auto">
+                    Historical climate trend data from Open-Meteo is not currently available for this location. This may be due to API limitations or data availability issues.
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    Data Source: Open-Meteo Historical Weather API
+                  </p>
+                </div>
+              ) : (
                 <>
                   {/* Trend Summary */}
                   <div className="bg-gradient-to-br from-white to-blue-50 border-2 border-blue-200 rounded-xl p-8 shadow-lg">
@@ -1262,6 +1076,7 @@ export default function AtmosphericScienceDashboard({
                     Insufficient historical data for trend analysis
                   </p>
                 </div>
+              </>
               )}
             </div>
           )}
