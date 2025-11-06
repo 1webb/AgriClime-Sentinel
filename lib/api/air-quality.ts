@@ -119,7 +119,6 @@ export async function getCurrentAirQuality(
   distance: number = 50 // miles - increased from 25 to find more stations
 ): Promise<AirQualityData[]> {
   if (!AIRNOW_API_KEY) {
-    console.warn("AirNow API key not configured");
     return [];
   }
 
@@ -132,22 +131,15 @@ export async function getCurrentAirQuality(
       `distance=${distance}&` +
       `API_KEY=${AIRNOW_API_KEY}`;
 
-    console.log(
-      `Fetching AirNow data for lat=${latitude}, lon=${longitude}, distance=${distance}mi`
-    );
-
     const response = await fetch(url);
 
     if (!response.ok) {
-      console.error("AirNow API error:", response.status, response.statusText);
       return [];
     }
 
     const data = await response.json();
-    console.log(`AirNow returned ${data.length} observations`);
     return data;
-  } catch (error) {
-    console.error("Error fetching air quality data:", error);
+  } catch {
     return [];
   }
 }
@@ -161,7 +153,6 @@ export async function getAirQualityForecast(
   date?: string // YYYY-MM-DD format
 ): Promise<AirQualityForecast[]> {
   if (!AIRNOW_API_KEY) {
-    console.warn("AirNow API key not configured");
     return [];
   }
 
@@ -179,14 +170,12 @@ export async function getAirQualityForecast(
     );
 
     if (!response.ok) {
-      console.error("AirNow forecast API error:", response.status);
       return [];
     }
 
     const data = await response.json();
     return data;
-  } catch (error) {
-    console.error("Error fetching air quality forecast:", error);
+  } catch {
     return [];
   }
 }
@@ -198,7 +187,6 @@ export async function getAirQualityByZip(
   zipCode: string
 ): Promise<AirQualityData[]> {
   if (!AIRNOW_API_KEY) {
-    console.warn("AirNow API key not configured");
     return [];
   }
 
@@ -212,14 +200,12 @@ export async function getAirQualityByZip(
     );
 
     if (!response.ok) {
-      console.error("AirNow ZIP API error:", response.status);
       return [];
     }
 
     const data = await response.json();
     return data;
-  } catch (error) {
-    console.error("Error fetching air quality by ZIP:", error);
+  } catch {
     return [];
   }
 }

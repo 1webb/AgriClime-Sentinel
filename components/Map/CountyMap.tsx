@@ -22,15 +22,11 @@ export default function CountyMap({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  console.log("CountyMap component mounted!");
-
   const loadMapData = useCallback(async () => {
     setLoading(true);
     setError(null);
 
     try {
-      console.log("Loading map data for layer:", layer, "crop:", cropType);
-
       // Fetch map data from API
       const params = new URLSearchParams({ layer });
       if (cropType && layer === "crop_risk") {
@@ -43,7 +39,6 @@ export default function CountyMap({
       }
 
       const result = await response.json();
-      console.log("Map data received:", result.data?.length, "records");
 
       // Fetch county geometries
       const countiesResponse = await fetch("/api/counties");
@@ -52,7 +47,6 @@ export default function CountyMap({
       }
 
       const counties = await countiesResponse.json();
-      console.log("Counties received:", counties.length);
 
       if (!mapRef.current) return;
 
@@ -178,10 +172,9 @@ export default function CountyMap({
         }
       ).addTo(mapRef.current);
 
-      console.log("Map rendering complete!");
       setLoading(false);
     } catch (err) {
-      console.error("Error loading map data:", err);
+      // Error handling - log to error monitoring service in production
       setError(err instanceof Error ? err.message : "Failed to load map data");
       setLoading(false);
     }
@@ -192,7 +185,6 @@ export default function CountyMap({
     try {
       if (!mapContainerRef.current || mapRef.current) return;
 
-      console.log("Initializing Leaflet map...");
       mapRef.current = L.map(mapContainerRef.current).setView(
         [39.8283, -98.5795],
         4
@@ -203,10 +195,8 @@ export default function CountyMap({
         attribution: "© OpenStreetMap contributors",
         maxZoom: 18,
       }).addTo(mapRef.current);
-
-      console.log("Map initialized successfully");
-    } catch (err) {
-      console.error("Error initializing map:", err);
+    } catch {
+      // Error handling - log to error monitoring service in production
       setError("Failed to initialize map");
     }
 
@@ -217,8 +207,8 @@ export default function CountyMap({
           mapRef.current.remove();
           mapRef.current = null;
         }
-      } catch (err) {
-        console.error("Error cleaning up map:", err);
+      } catch {
+        // Silently handle cleanup errors
       }
     };
   }, []);

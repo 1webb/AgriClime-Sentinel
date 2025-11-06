@@ -35,8 +35,6 @@ async function fetchNOAASounding(
     // Try to fetch HRRR model sounding
     const url = `${baseUrl}?lat=${lat}&lon=${lon}&model=hrrr`;
 
-    console.log("Fetching NOAA HRRR sounding from:", url);
-
     const response = await fetch(url, {
       headers: {
         "User-Agent": "AgriClime-Sentinel/1.0",
@@ -45,7 +43,6 @@ async function fetchNOAASounding(
     });
 
     if (!response.ok) {
-      console.warn("HRRR data not available, will use sample data");
       return null;
     }
 
@@ -53,7 +50,6 @@ async function fetchNOAASounding(
 
     // Parse the sounding data
     if (!data.profiles || data.profiles.length === 0) {
-      console.warn("No sounding profiles available");
       return null;
     }
 
@@ -61,7 +57,6 @@ async function fetchNOAASounding(
     const profile = data.profiles[0];
 
     if (!profile.profile || profile.profile.length === 0) {
-      console.warn("Empty sounding profile");
       return null;
     }
 
@@ -90,8 +85,7 @@ async function fetchNOAASounding(
       windSpeed,
       windDirection,
     };
-  } catch (error) {
-    console.error("Error fetching NOAA sounding:", error);
+  } catch {
     return null;
   }
 }
@@ -154,8 +148,7 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.json(response);
-  } catch (error) {
-    console.error("Error in severe weather API:", error);
+  } catch {
     return NextResponse.json(
       { error: "Failed to calculate severe weather indices" },
       { status: 500 }
@@ -192,8 +185,7 @@ export async function POST(request: NextRequest) {
       indices,
       timestamp: new Date().toISOString(),
     });
-  } catch (error) {
-    console.error("Error in severe weather POST API:", error);
+  } catch {
     return NextResponse.json(
       { error: "Failed to calculate severe weather indices" },
       { status: 500 }

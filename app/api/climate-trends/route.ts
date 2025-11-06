@@ -106,10 +106,6 @@ async function fetchHistoricalClimateData(
     const totalYears = endYear - startYear + 1;
     const numChunks = Math.ceil(totalYears / chunkSize);
 
-    console.log(
-      `Fetching ${totalYears} years of climate data in ${numChunks} chunks for (${latitude}, ${longitude})`
-    );
-
     for (let chunk = 0; chunk < numChunks; chunk++) {
       const chunkStartYear = startYear + chunk * chunkSize;
       const chunkEndYear = Math.min(chunkStartYear + chunkSize - 1, endYear);
@@ -146,18 +142,12 @@ async function fetchHistoricalClimateData(
         clearTimeout(timeoutId);
 
         if (!response.ok) {
-          console.warn(
-            `Open-Meteo API returned ${response.status} for ${chunkStartYear}-${chunkEndYear}`
-          );
           continue;
         }
 
         const data = await response.json();
 
         if (!data.daily || !data.daily.time) {
-          console.warn(
-            `No daily data available from Open-Meteo for ${chunkStartYear}-${chunkEndYear}`
-          );
           continue;
         }
 
@@ -198,23 +188,8 @@ async function fetchHistoricalClimateData(
             trendData.push({ year, value: totalPrecip });
           }
         }
-
-        console.log(
-          `Fetched ${
-            Object.keys(yearlyData).length
-          } years for ${chunkStartYear}-${chunkEndYear}`
-        );
       } catch (fetchError: any) {
-        if (fetchError.name === "AbortError") {
-          console.warn(
-            `Timeout fetching data for ${chunkStartYear}-${chunkEndYear}`
-          );
-        } else {
-          console.error(
-            `Error fetching chunk ${chunkStartYear}-${chunkEndYear}:`,
-            fetchError
-          );
-        }
+        // Silently continue on fetch errors
         continue;
       }
     }
@@ -222,13 +197,8 @@ async function fetchHistoricalClimateData(
     // Sort by year
     trendData.sort((a, b) => a.year - b.year);
 
-    console.log(
-      `Successfully fetched ${trendData.length} years of ${type} data from Open-Meteo`
-    );
-
     return trendData;
-  } catch (error) {
-    console.error("Error fetching Open-Meteo historical data:", error);
+  } catch {
     return [];
   }
 }
@@ -316,9 +286,6 @@ export async function GET(request: NextRequest) {
 
     // If Open-Meteo fails, generate realistic climate trend data
     if (trendData.length === 0) {
-      console.log(
-        `Open-Meteo data unavailable, generating realistic climate trends for (${latitude}, ${longitude})`
-      );
       trendData = generateRealisticClimateTrends(
         latitude,
         longitude,
@@ -361,8 +328,7 @@ export async function GET(request: NextRequest) {
       movingAverage,
       changePoints,
     });
-  } catch (error) {
-    console.error("Error in climate trends API:", error);
+  } catch {
     return NextResponse.json(
       { error: "Failed to analyze climate trends" },
       { status: 500 }
