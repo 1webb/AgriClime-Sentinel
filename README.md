@@ -4,16 +4,46 @@
 ![License](https://img.shields.io/badge/License-MIT-blue)
 ![Next.js](https://img.shields.io/badge/Next.js-16.0-black)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)
+![Real Data](https://img.shields.io/badge/Real%20Data-NOAA%20%7C%20EPA%20%7C%20Open--Meteo-brightgreen)
 
 ## 🚀 Live Demo
 
 **[https://agri-clime-sentinel-ng1cxkfz1-clevernats-projects.vercel.app](https://agri-clime-sentinel-ng1cxkfz1-clevernats-projects.vercel.app)**
 
+---
+
+## 📸 Screenshots
+
+### Interactive Map View
+
+<!-- TODO: Add screenshot of map with data layers -->
+
+_Interactive map showing 3,221 US counties with climate data layers_
+
+### Atmospheric Science Dashboard
+
+<!-- TODO: Add screenshot of dashboard with all 4 tabs -->
+
+_Real-time weather alerts, severe weather indices, air quality, and climate trends_
+
+### Climate Trends Analysis
+
+<!-- TODO: Add screenshot of climate trends tab -->
+
+_55 years of historical temperature data with statistical analysis_
+
+---
+
 ## 🌾 Executive Summary
 
 **AgriClime Sentinel** is a comprehensive, real-time climate risk monitoring platform designed to protect U.S. agricultural security and food supply chains. This tool addresses a critical national need by providing farmers, policymakers, and agricultural insurers with actionable intelligence on climate-related threats to crop production.
 
-The platform analyzes multiple climate variables across all U.S. counties, translating complex meteorological data into clear risk assessments that enable proactive decision-making in the face of climate change.
+The platform uses a **hybrid data architecture** that combines:
+
+- ✅ **Fast map exploration** with sample data for 3,221 counties (<1 second)
+- ✅ **Real-time government data** from NOAA, EPA, and Open-Meteo APIs for county-specific analysis
+
+This architecture ensures optimal user experience while maintaining data accuracy where it matters most.
 
 ### National Importance
 
@@ -21,6 +51,82 @@ The platform analyzes multiple climate variables across all U.S. counties, trans
 - **Food Security**: Ensures stable domestic food supply for 330+ million Americans
 - **Climate Adaptation**: Provides critical infrastructure for agricultural adaptation to climate change
 - **Risk Mitigation**: Enables early warning systems for drought, heat stress, and crop failure
+
+---
+
+## 🏗️ **Data Architecture: Two-Tier Hybrid System**
+
+AgriClime Sentinel uses a sophisticated **two-tier data architecture** that balances performance with accuracy:
+
+### **Tier 1: Map View (Sample Data)** 🗺️
+
+**Purpose:** Fast exploration of national climate patterns
+
+- **What:** 5 climate data layers across all 3,221 US counties
+- **Data Source:** PostgreSQL database with algorithmically-generated sample data
+- **Load Time:** <1 second
+- **User Experience:** Instant visualization, smooth panning/zooming
+
+**Data Layers:**
+
+1. 🌧️ **Drought Status** - Drought severity index (D0-D4)
+2. 💧 **30-Day Precipitation** - Total rainfall in last 30 days
+3. 🌡️ **Temperature Anomaly** - Deviation from 5-year baseline
+4. 🌱 **Soil Moisture** - Soil moisture levels (0-10cm depth)
+5. 🌾 **Crop Risk** - Agricultural risk scores by crop type
+
+### **Tier 2: County Dashboard (Real Data)** 📊
+
+**Purpose:** Accurate, real-time data for specific locations
+
+- **What:** Atmospheric Science Dashboard with 4 real-time features
+- **Data Source:** Government APIs (NOAA, EPA, Open-Meteo)
+- **Load Time:** 2-5 seconds per county
+- **User Experience:** Click any county → Get real government data
+
+**Dashboard Features:**
+
+| Feature               | API Source             | Status                  | Data Type                                 |
+| --------------------- | ---------------------- | ----------------------- | ----------------------------------------- |
+| ⚡ **Weather Alerts** | NOAA NWS API           | ✅ Real                 | Active warnings, watches, advisories      |
+| 🌪️ **Severe Weather** | NOAA HRRR Model        | ⚠️ Real (with fallback) | CAPE, SRH, wind shear, tornado parameters |
+| 💨 **Air Quality**    | EPA AirNow API         | ✅ Real                 | AQI for O3, PM2.5, PM10, NO2, SO2, CO     |
+| 📈 **Climate Trends** | Open-Meteo Archive API | ✅ Real                 | 55 years of temperature data (1970-2025)  |
+
+### **Why This Architecture?**
+
+| Approach          | Map Layers (All Counties) | County Dashboard (Single County) |
+| ----------------- | ------------------------- | -------------------------------- |
+| **Real-Time API** | ❌ 65-90 seconds          | ✅ 2-5 seconds                   |
+| **Sample Data**   | ✅ <1 second              | ❌ Not accurate                  |
+| **Our Solution**  | ✅ Sample (fast)          | ✅ Real (accurate)               |
+
+**Result:** Best of both worlds - fast exploration + accurate details! 🚀
+
+### **User Flow**
+
+```
+1. User Opens Map
+   ↓
+2. Selects Data Layer (Drought, Precipitation, etc.)
+   ↓
+3. Map Shows 3,221 Counties with Sample Data (<1 second) ✅
+   - Fast visualization
+   - Color-coded by values
+   - Smooth interaction
+   ↓
+4. User Clicks on Specific County
+   ↓
+5. Atmospheric Science Dashboard Opens (2-5 seconds) ✅
+   ├─ Weather Alerts (NOAA NWS API) → Real Data
+   ├─ Severe Weather (NOAA HRRR) → Real Data (with fallback)
+   ├─ Air Quality (EPA AirNow) → Real Data
+   └─ Climate Trends (Open-Meteo) → Real Data
+
+Result: User gets fast exploration + accurate county details!
+```
+
+**📚 For detailed architecture documentation, see:** [`docs/DATA_ARCHITECTURE.md`](docs/DATA_ARCHITECTURE.md)
 
 ---
 
@@ -78,25 +184,37 @@ The index is calibrated for five major U.S. crops, each with unique growth stage
 
 ---
 
-## 🎨 Recent Improvements (December 2024)
+## 🎨 Recent Improvements (November 2024)
+
+### Data Architecture Overhaul
+
+- **Two-Tier Hybrid System**: Implemented sophisticated data architecture
+  - Map layers: Sample data for instant loading (<1 second for 3,221 counties)
+  - County dashboard: Real government APIs for accurate data (2-5 seconds)
+  - Result: 100x faster map performance while maintaining data accuracy
 
 ### Performance Optimization
 
-- **75% Faster Dashboard Loading**: Implemented parallel API calls using `Promise.all()` instead of sequential fetching
+- **75% Faster Dashboard Loading**: Implemented parallel API calls using `Promise.all()`
+
   - Before: 8-12 seconds (4 APIs called sequentially)
   - After: 2-3 seconds (all APIs called simultaneously)
   - Affects: Weather Alerts, Severe Weather Indices, Air Quality, Climate Trends
 
-### UI/UX Enhancements
-
-- **Improved Color Accessibility**: Updated "Moderate" AQI category color from pure yellow (#FFFF00) to amber (#F59E0B)
-  - Meets WCAG AA contrast requirements (4.5:1 ratio)
-  - Better visibility for users with color vision deficiencies
-  - Consistent across all air quality displays
+- **Map Performance**: Optimized for instant rendering
+  - PostgreSQL materialized views for fast queries
+  - In-memory caching (6-hour duration)
+  - Batch processing for large datasets
 
 ### Real-Time Data Integration
 
-- **NOAA HRRR Model Integration**: Live severe weather indices including:
+- **NOAA NWS API**: Live weather alerts
+
+  - Active warnings, watches, and advisories
+  - County-specific alert filtering
+  - Real-time updates
+
+- **NOAA HRRR Model**: Severe weather indices
 
   - CAPE (Convective Available Potential Energy)
   - Lifted Index, K-Index, Total Totals Index
@@ -105,16 +223,47 @@ The index is calibrated for five major U.S. crops, each with unique growth stage
   - Significant Tornado Parameter (STP)
   - Supercell Composite Parameter (SCP)
 
-- **EPA AirNow API**: Real-time air quality monitoring with:
+- **EPA AirNow API**: Real-time air quality monitoring
 
   - Individual pollutant levels (PM2.5, PM10, O3, NO2, SO2, CO)
   - Overall AQI with dominant pollutant identification
   - Health recommendations based on current conditions
+  - Fixed field name mismatch bug for accurate category display
 
-- **Climate Trend Analysis**: 56-year historical temperature trends (1970-2025) with:
-  - Statistical trend analysis (direction, rate of change, significance)
+- **Open-Meteo Archive API**: Historical climate trends
+  - 55 years of temperature data (1970-2025)
+  - Statistical trend analysis (linear regression, Mann-Kendall test)
   - Moving average visualization
+  - Change point detection
   - Realistic climate warming patterns based on NOAA data
+
+### UI/UX Enhancements
+
+- **Improved Color Accessibility**: Updated "Moderate" AQI category color
+
+  - Changed from pure yellow (#FFFF00) to amber (#F59E0B)
+  - Meets WCAG AA contrast requirements (4.5:1 ratio)
+  - Better visibility for users with color vision deficiencies
+
+- **Fixed Climate Trends Interface**: Resolved TypeScript interface mismatch
+  - Fixed `direction` → `trendDirection` field mapping
+  - Fixed `significance` → `isSignificant` field mapping
+  - Added API-generated interpretation text
+  - Eliminated "Cannot read properties of undefined" errors
+
+### Bug Fixes
+
+- **Air Quality API**: Fixed field name mismatch (uppercase vs lowercase)
+
+  - EPA API returns `AQI`, `ParameterName`, `Category` (uppercase)
+  - TypeScript interface expected lowercase field names
+  - Added fallback logic to handle both formats
+  - Fixed incorrect "Hazardous" category display for moderate AQI values
+
+- **Climate Trends**: Fixed interface mismatch causing runtime errors
+  - Updated component interface to match API response structure
+  - Fixed all field references throughout the component
+  - Added proper TypeScript types for trend analysis
 
 ---
 
@@ -221,16 +370,44 @@ The index is calibrated for five major U.S. crops, each with unique growth stage
 
 **Data Sources**:
 
-- **Open-Meteo API**: Historical weather data (1940-present)
-- **NOAA U.S. Drought Monitor**: Weekly drought classifications
-- **NOAA HRRR Model**: Real-time severe weather indices and atmospheric soundings
-- **EPA AirNow API**: Real-time air quality monitoring (PM2.5, PM10, O3, NO2, SO2, CO)
+**Real-Time APIs (County Dashboard):**
+
+- **NOAA NWS API**: Active weather alerts, warnings, and advisories
+
+  - Endpoint: `https://api.weather.gov/alerts/active`
+  - Status: ✅ Real data, no API key required
+
+- **NOAA HRRR Model**: Severe weather indices and atmospheric soundings
+
+  - Endpoint: `https://mesonet.agron.iastate.edu/api/1/sounding.json`
+  - Status: ⚠️ Real data with fallback, no API key required
+
+- **EPA AirNow API**: Real-time air quality monitoring
+
+  - Endpoint: `https://www.airnowapi.org/aq/observation/latLong/current/`
+  - Status: ✅ Real data, API key required (configured)
+  - Pollutants: PM2.5, PM10, O3, NO2, SO2, CO
+
+- **Open-Meteo Archive API**: Historical climate data (1970-2025)
+  - Endpoint: `https://archive-api.open-meteo.com/v1/archive`
+  - Status: ✅ Real data, no API key required
+  - Analysis: Linear regression, Mann-Kendall test, change point detection
+
+**Database (Map Layers):**
+
+- **PostgreSQL + PostGIS**: Sample climate data for 3,221 counties
+  - Hosted on Supabase
+  - Materialized views for fast queries
+  - In-memory caching (6-hour duration)
+
+**Geospatial Data:**
+
 - **USGS**: County boundary GeoJSON files
 
 **Deployment**:
 
 - **Vercel**: Frontend and API hosting
-- **Supabase**: Database hosting
+- **Supabase**: PostgreSQL database with PostGIS extension
 - **GitHub**: Version control and CI/CD
 
 ### Database Schema
@@ -299,8 +476,8 @@ The platform uses a sophisticated PostgreSQL schema optimized for geospatial and
 1. **Clone the repository**:
 
    ```bash
-   git clone https://github.com/yourusername/agriclime-sentinel.git
-   cd agriclime-sentinel
+   git clone https://github.com/clevernat/AgriClime-Sentinel.git
+   cd AgriClime-Sentinel
    ```
 
 2. **Install dependencies**:
@@ -311,36 +488,47 @@ The platform uses a sophisticated PostgreSQL schema optimized for geospatial and
 
 3. **Set up environment variables**:
 
+   Create a `.env` file in the root directory:
+
    ```bash
-   cp .env.example .env
-   ```
-
-   Edit `.env` and add your Supabase credentials:
-
-   ```
+   # Supabase Configuration
    NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
    NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+
+   # EPA AirNow API Key (required for real air quality data)
+   # Get your free API key at: https://docs.airnowapi.org/account/request/
+   AIRNOW_API_KEY=your_airnow_api_key
+
+   # Optional: Open-Meteo API Key (for premium features)
+   OPEN_METEO_API_KEY=optional_if_using_premium
    ```
 
 4. **Set up the database**:
 
-   - Create a new Supabase project
+   - Create a new Supabase project at [supabase.com](https://supabase.com)
    - Enable PostGIS extension in SQL editor:
      ```sql
      CREATE EXTENSION IF NOT EXISTS postgis;
      ```
-   - Run the schema:
+   - Run the database schema:
      ```bash
      psql -h your-db-host -U postgres -d postgres -f database/schema.sql
      ```
 
-5. **Populate data** (optional - for demo):
+5. **Populate sample data** (required for map layers):
 
    ```bash
    npm install -g tsx
    tsx scripts/populate-counties.ts
    tsx scripts/populate-sample-data.ts
+   tsx scripts/populate-crop-risk-data.ts
    ```
+
+   This will populate:
+
+   - 3,221 US county boundaries
+   - Sample climate data (drought, precipitation, temperature, soil moisture)
+   - Crop risk indices for 5 major crops
 
 6. **Run the development server**:
 
@@ -350,6 +538,28 @@ The platform uses a sophisticated PostgreSQL schema optimized for geospatial and
 
 7. **Open the application**:
    Navigate to [http://localhost:3000](http://localhost:3000)
+
+### API Keys Setup
+
+**Required:**
+
+- **Supabase**: Database hosting (free tier available)
+  - Sign up at [supabase.com](https://supabase.com)
+  - Create a new project
+  - Copy URL and anon key to `.env`
+
+**Optional but Recommended:**
+
+- **EPA AirNow API**: Real-time air quality data
+  - Sign up at [docs.airnowapi.org](https://docs.airnowapi.org/account/request/)
+  - Free tier: 500 requests/hour
+  - Add key to `.env` as `AIRNOW_API_KEY`
+
+**Not Required:**
+
+- **NOAA NWS API**: No API key needed
+- **NOAA HRRR Model**: No API key needed
+- **Open-Meteo API**: No API key needed (free tier)
 
 ---
 
@@ -433,6 +643,57 @@ The platform uses a sophisticated PostgreSQL schema optimized for geospatial and
    - Extend to global agricultural regions
    - Multi-language support
    - Country-specific crop calibrations
+
+---
+
+## 📚 Documentation
+
+Comprehensive documentation is available in the `docs/` directory:
+
+- **[`docs/DATA_ARCHITECTURE.md`](docs/DATA_ARCHITECTURE.md)** - Complete guide to the two-tier hybrid data architecture
+
+  - Architecture diagrams and data flow
+  - Performance metrics and benchmarks
+  - Design decisions and rationale
+  - User experience walkthrough
+
+- **[`DATA_SOURCE_AUDIT.md`](DATA_SOURCE_AUDIT.md)** - Detailed audit of all data sources
+
+  - Map data layers (sample data)
+  - Atmospheric Science Dashboard (real APIs)
+  - API endpoints and implementation details
+  - Test results and verification
+
+- **[`docs/REAL_DATA_SOURCES.md`](docs/REAL_DATA_SOURCES.md)** - Data source documentation
+
+  - API documentation links
+  - Data formats and schemas
+  - Rate limits and caching strategies
+
+- **[`REAL_DATA_IMPLEMENTATION.md`](REAL_DATA_IMPLEMENTATION.md)** - Failed real-time implementation attempt
+  - Why real-time API calls for map layers don't work
+  - Performance analysis and benchmarks
+  - Lessons learned
+
+### Code Documentation
+
+- **API Routes**: `/app/api/` - RESTful API endpoints
+
+  - `/api/map-data` - Map layer data (sample)
+  - `/api/weather-alerts` - NOAA NWS alerts (real)
+  - `/api/severe-weather` - NOAA HRRR indices (real)
+  - `/api/air-quality` - EPA AirNow data (real)
+  - `/api/climate-trends` - Open-Meteo historical data (real)
+
+- **Components**: `/components/` - React components
+
+  - `Dashboard/AtmosphericScienceDashboard.tsx` - Main dashboard component
+  - `Map/` - Leaflet map components
+  - `Charts/` - Recharts visualization components
+
+- **Libraries**: `/lib/` - Utility functions and API clients
+  - `lib/api/` - API client functions
+  - `lib/utils/` - Helper utilities
 
 ---
 
