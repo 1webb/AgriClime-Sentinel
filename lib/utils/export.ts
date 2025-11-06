@@ -120,13 +120,25 @@ export async function exportToPDF(
     const leftMargin = 20;
     const pageWidth = 170; // 210mm - 40mm margins
 
+    // Helper to add colored box
+    const addColorBox = (
+      color: [number, number, number],
+      height: number = 8
+    ) => {
+      pdf.setFillColor(color[0], color[1], color[2]);
+      pdf.rect(leftMargin, yPos, pageWidth, height, "F");
+      yPos += height;
+    };
+
     // Helper function to add text with word wrap
     const addText = (
       text: string,
       fontSize: number = 10,
-      isBold: boolean = false
+      isBold: boolean = false,
+      color: [number, number, number] = [0, 0, 0]
     ) => {
       pdf.setFontSize(fontSize);
+      pdf.setTextColor(color[0], color[1], color[2]);
       if (isBold) {
         pdf.setFont("helvetica", "bold");
       } else {
@@ -145,17 +157,35 @@ export async function exportToPDF(
       yPos += 3;
     };
 
-    // Title
-    addText(
-      `Climate Report: ${data.county.name}, ${data.county.state}`,
-      18,
-      true
-    );
-    addText(`Generated: ${new Date().toLocaleDateString()}`, 10);
-    yPos += 5;
+    // Title with green background
+    addColorBox([34, 197, 94]); // Green
+    pdf.setTextColor(255, 255, 255);
+    pdf.setFontSize(20);
+    pdf.setFont("helvetica", "bold");
+    pdf.text("Climate Risk Report", leftMargin + 2, yPos - 3);
+    yPos += 2;
+
+    // Location
+    pdf.setTextColor(0, 0, 0);
+    pdf.setFontSize(14);
+    pdf.setFont("helvetica", "bold");
+    pdf.text(`${data.county.name}, ${data.county.state}`, leftMargin, yPos);
+    yPos += 8;
+
+    pdf.setFontSize(10);
+    pdf.setFont("helvetica", "normal");
+    pdf.text(`Generated: ${new Date().toLocaleString()}`, leftMargin, yPos);
+    yPos += 10;
 
     // Current Climate Conditions
-    addText("Current Climate Conditions", 14, true);
+    addColorBox([59, 130, 246], 6); // Blue
+    pdf.setTextColor(255, 255, 255);
+    pdf.setFontSize(14);
+    pdf.setFont("helvetica", "bold");
+    pdf.text("Current Climate Conditions", leftMargin + 2, yPos - 2);
+    yPos += 5;
+
+    pdf.setTextColor(0, 0, 0);
     const climate = data.current_climate;
     if (climate) {
       const temp = climate.temperature_avg;
@@ -205,7 +235,14 @@ export async function exportToPDF(
     yPos += 5;
 
     // Agricultural Metrics
-    addText("Agricultural Metrics", 14, true);
+    addColorBox([249, 115, 22], 6); // Orange
+    pdf.setTextColor(255, 255, 255);
+    pdf.setFontSize(14);
+    pdf.setFont("helvetica", "bold");
+    pdf.text("Agricultural Metrics", leftMargin + 2, yPos - 2);
+    yPos += 5;
+
+    pdf.setTextColor(0, 0, 0);
     const gdd = data.growing_degree_days;
     const heatDays = data.extreme_heat_days_ytd;
 
@@ -249,7 +286,14 @@ export async function exportToPDF(
 
     // Historical Trends
     if (data.historical_trends && data.historical_trends.length > 0) {
-      addText("Historical Trends (Last 10 Years)", 14, true);
+      addColorBox([168, 85, 247], 6); // Purple
+      pdf.setTextColor(255, 255, 255);
+      pdf.setFontSize(14);
+      pdf.setFont("helvetica", "bold");
+      pdf.text("Historical Trends (Last 10 Years)", leftMargin + 2, yPos - 2);
+      yPos += 5;
+
+      pdf.setTextColor(0, 0, 0);
       const recentTrends = data.historical_trends.slice(-10);
 
       // Add table header
@@ -386,6 +430,202 @@ export async function exportChartAsPNG(
     console.error("Error exporting chart:", error);
     throw new Error(
       `Failed to export chart: ${
+        error instanceof Error ? error.message : "Unknown error"
+      }`
+    );
+  }
+}
+
+/**
+ * Export atmospheric science data to PDF with professional formatting and colors
+ */
+export async function exportAtmosphericDataToPDF(
+  countyName: string,
+  state: string,
+  data: {
+    alerts?: any[];
+    severeWeather?: any;
+    airQuality?: any;
+    climateTrends?: any;
+  },
+  filename: string = "atmospheric-report.pdf"
+) {
+  try {
+    const pdf = new jsPDF({
+      orientation: "portrait",
+      unit: "mm",
+      format: "a4",
+    });
+
+    let yPos = 20;
+    const leftMargin = 20;
+    const pageWidth = 170;
+
+    // Helper to add colored box
+    const addColorBox = (
+      color: [number, number, number],
+      height: number = 8
+    ) => {
+      pdf.setFillColor(color[0], color[1], color[2]);
+      pdf.rect(leftMargin, yPos, pageWidth, height, "F");
+      yPos += height;
+    };
+
+    // Helper to add text
+    const addText = (
+      text: string,
+      fontSize: number = 10,
+      isBold: boolean = false,
+      color: [number, number, number] = [0, 0, 0]
+    ) => {
+      pdf.setFontSize(fontSize);
+      pdf.setTextColor(color[0], color[1], color[2]);
+      if (isBold) {
+        pdf.setFont("helvetica", "bold");
+      } else {
+        pdf.setFont("helvetica", "normal");
+      }
+
+      const lines = pdf.splitTextToSize(text, pageWidth);
+      lines.forEach((line: string) => {
+        if (yPos > 270) {
+          pdf.addPage();
+          yPos = 20;
+        }
+        pdf.text(line, leftMargin, yPos);
+        yPos += fontSize * 0.5;
+      });
+      yPos += 3;
+    };
+
+    // Title with blue background
+    addColorBox([37, 99, 235]); // Blue
+    pdf.setTextColor(255, 255, 255);
+    pdf.setFontSize(20);
+    pdf.setFont("helvetica", "bold");
+    pdf.text("Atmospheric Science Report", leftMargin + 2, yPos - 3);
+    yPos += 2;
+
+    // Location
+    pdf.setTextColor(0, 0, 0);
+    pdf.setFontSize(14);
+    pdf.setFont("helvetica", "bold");
+    pdf.text(`${countyName}, ${state}`, leftMargin, yPos);
+    yPos += 8;
+
+    pdf.setFontSize(10);
+    pdf.setFont("helvetica", "normal");
+    pdf.text(`Generated: ${new Date().toLocaleString()}`, leftMargin, yPos);
+    yPos += 10;
+
+    // Weather Alerts Section
+    if (data.alerts && data.alerts.length > 0) {
+      addColorBox([239, 68, 68], 6); // Red
+      pdf.setTextColor(255, 255, 255);
+      pdf.setFontSize(14);
+      pdf.setFont("helvetica", "bold");
+      pdf.text("⚠ Active Weather Alerts", leftMargin + 2, yPos - 2);
+      yPos += 5;
+
+      data.alerts.forEach((alert: any) => {
+        pdf.setTextColor(0, 0, 0);
+        addText(`Event: ${alert.event || "N/A"}`, 11, true, [220, 38, 38]);
+        addText(`Severity: ${alert.severity || "N/A"}`, 10);
+        addText(`Headline: ${alert.headline || "N/A"}`, 10);
+        if (alert.onset)
+          addText(`Onset: ${new Date(alert.onset).toLocaleString()}`, 9);
+        if (alert.expires)
+          addText(`Expires: ${new Date(alert.expires).toLocaleString()}`, 9);
+        yPos += 3;
+      });
+    } else {
+      addColorBox([34, 197, 94], 6); // Green
+      pdf.setTextColor(255, 255, 255);
+      pdf.setFontSize(14);
+      pdf.setFont("helvetica", "bold");
+      pdf.text("✓ No Active Weather Alerts", leftMargin + 2, yPos - 2);
+      yPos += 8;
+    }
+
+    // Air Quality Section
+    if (data.airQuality) {
+      const aqi = data.airQuality.overall?.aqi || 0;
+      const category = data.airQuality.overall?.category?.name || "Unknown";
+
+      // Color based on AQI
+      let aqiColor: [number, number, number] = [34, 197, 94]; // Green
+      if (aqi > 150) aqiColor = [220, 38, 38]; // Red
+      else if (aqi > 100) aqiColor = [249, 115, 22]; // Orange
+      else if (aqi > 50) aqiColor = [234, 179, 8]; // Yellow
+
+      addColorBox(aqiColor, 6);
+      pdf.setTextColor(255, 255, 255);
+      pdf.setFontSize(14);
+      pdf.setFont("helvetica", "bold");
+      pdf.text("Air Quality Index", leftMargin + 2, yPos - 2);
+      yPos += 5;
+
+      pdf.setTextColor(0, 0, 0);
+      addText(`AQI: ${aqi} - ${category}`, 12, true);
+
+      if (data.airQuality.recommendations) {
+        addText("Health Recommendations:", 11, true);
+        data.airQuality.recommendations.forEach((rec: string) => {
+          addText(`• ${rec}`, 9);
+        });
+      }
+      yPos += 5;
+    }
+
+    // Severe Weather Indices
+    if (data.severeWeather) {
+      addColorBox([168, 85, 247], 6); // Purple
+      pdf.setTextColor(255, 255, 255);
+      pdf.setFontSize(14);
+      pdf.setFont("helvetica", "bold");
+      pdf.text("Severe Weather Indices", leftMargin + 2, yPos - 2);
+      yPos += 5;
+
+      pdf.setTextColor(0, 0, 0);
+      const indices = data.severeWeather.indices || data.severeWeather;
+
+      if (indices.cape !== undefined) {
+        addText(
+          `CAPE: ${indices.cape.toFixed(0)} J/kg - ${
+            indices.cape_category || "N/A"
+          }`,
+          10
+        );
+      }
+      if (indices.k_index !== undefined) {
+        addText(`K-Index: ${indices.k_index.toFixed(1)}`, 10);
+      }
+      if (indices.lifted_index !== undefined) {
+        addText(`Lifted Index: ${indices.lifted_index.toFixed(1)}`, 10);
+      }
+      yPos += 5;
+    }
+
+    // Footer
+    yPos = 280;
+    pdf.setFontSize(8);
+    pdf.setTextColor(100, 100, 100);
+    pdf.text(
+      "AgriClime Sentinel - Atmospheric Science Dashboard",
+      leftMargin,
+      yPos
+    );
+    pdf.text(
+      "https://github.com/clevernat/AgriClime-Sentinel",
+      leftMargin,
+      yPos + 4
+    );
+
+    pdf.save(filename);
+  } catch (error) {
+    console.error("Error generating atmospheric PDF:", error);
+    throw new Error(
+      `Failed to export PDF: ${
         error instanceof Error ? error.message : "Unknown error"
       }`
     );

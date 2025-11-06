@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Download, FileSpreadsheet, FileText } from "lucide-react";
 import {
   exportAtmosphericDataToCSV,
-  exportToPDF,
+  exportAtmosphericDataToPDF,
   generateFilename,
 } from "@/lib/utils/export";
 
@@ -55,21 +55,9 @@ export default function AtmosphericExportButtons({
         "pdf"
       );
 
-      // Create a minimal data object for PDF export
-      const pdfData: any = {
-        county: { name: countyName, state, fips: "" },
-        currentClimate: {},
-        historicalTrends: [],
-        growingDegreeDays: 0,
-        extremeHeatDaysYtd: 0,
-        precipitationVsAvg: {
-          current: 0,
-          historical_avg: 0,
-          percent_difference: 0,
-        },
-      };
+      await exportAtmosphericDataToPDF(countyName, state, data, filename);
 
-      await exportToPDF(dashboardElementId, pdfData, filename);
+      alert("PDF exported successfully! ✅");
     } catch (error) {
       console.error("Export error:", error);
       const errorMessage =
