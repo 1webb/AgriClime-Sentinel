@@ -27,22 +27,48 @@ export default function RegionalDashboard({
 }: RegionalDashboardProps) {
   const [data, setData] = useState<RegionalDashboardData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadingProgress, setLoadingProgress] = useState<string>("Initializing...");
   const [error, setError] = useState<string | null>(null);
   const [errorDetails, setErrorDetails] = useState<{
     countyName?: string;
     countyState?: string;
   } | null>(null);
 
+  /**
+   * Helper function to fetch with timeout
+   */
+  const fetchWithTimeout = async (url: string, timeout = 15000) => {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+    try {
+      const response = await fetch(url, { signal: controller.signal });
+      clearTimeout(timeoutId);
+      return response;
+    } catch (error) {
+      clearTimeout(timeoutId);
+      if (error instanceof Error && error.name === 'AbortError') {
+        console.warn(`Request timeout for ${url}`);
+        throw new Error('Request timed out. Please try again.');
+      }
+      throw error;
+    }
+  };
+
   const loadDashboardData = useCallback(async () => {
     setLoading(true);
+    setLoadingProgress("Fetching agricultural data...");
     setError(null);
     setErrorDetails(null);
 
     try {
-      const response = await fetch(
-        `/api/regional-dashboard?fips=${countyFips}`
+      setLoadingProgress("Loading climate and agricultural metrics...");
+      const response = await fetchWithTimeout(
+        `/api/regional-dashboard?fips=${countyFips}`,
+        15000 // 15 second timeout
       );
 
+      setLoadingProgress("Processing data...");
       const result = await response.json();
 
       if (!response.ok) {
@@ -75,10 +101,16 @@ export default function RegionalDashboard({
   if (loading) {
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] animate-fadeIn p-4">
-        <div className="bg-white p-6 sm:p-8 rounded-xl sm:rounded-2xl shadow-2xl flex flex-col items-center space-y-3 sm:space-y-4 animate-scaleIn">
-          <div className="w-12 h-12 sm:w-16 sm:h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+        <div className="bg-white p-6 sm:p-8 rounded-xl sm:rounded-2xl shadow-2xl flex flex-col items-center space-y-3 sm:space-y-4 animate-scaleIn max-w-md">
+          <div className="w-12 h-12 sm:w-16 sm:h-16 border-4 border-green-600 border-t-transparent rounded-full animate-spin"></div>
           <div className="text-gray-800 text-base sm:text-xl font-semibold text-center">
-            Loading dashboard...
+            Loading agricultural dashboard...
+          </div>
+          <div className="text-gray-600 text-xs sm:text-sm text-center">
+            {loadingProgress}
+          </div>
+          <div className="text-gray-400 text-xs text-center mt-2">
+            Fetching climate and agricultural data
           </div>
         </div>
       </div>

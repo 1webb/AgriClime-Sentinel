@@ -101,264 +101,631 @@ export function exportToCSV(
 }
 
 /**
- * Export dashboard to PDF format using jsPDF text (no html2canvas)
- * This avoids CSS compatibility issues
+ * Force render all charts in Agricultural Dashboard by ensuring they're visible
+ */
+async function forceRenderAgriculturalCharts(): Promise<() => void> {
+  console.log("[Agricultural Chart Rendering] Ensuring all charts are rendered...");
+
+  // Find the regional dashboard content container
+  const dashboardContent = document.getElementById("regional-dashboard-content");
+
+  if (!dashboardContent) {
+    console.warn("[Agricultural Chart Rendering] Dashboard content not found");
+    return () => {}; // Return no-op cleanup function
+  }
+
+  // Wait for Recharts to render all SVG charts
+  await new Promise((resolve) => setTimeout(resolve, 2000));
+
+  console.log("[Agricultural Chart Rendering] ✅ All charts rendered");
+
+  // Return cleanup function (no-op for agricultural dashboard since no tabs)
+  return () => {
+    console.log("[Agricultural Chart Rendering] Cleanup complete");
+  };
+}
+
+/**
+ * Export Agricultural Dashboard to professional thesis-quality PDF with charts
+ * Matches the quality and formatting of the Atmospheric Science Dashboard PDF
  */
 export async function exportToPDF(
   elementId: string,
   data: RegionalDashboardData,
   filename: string = "climate-report.pdf"
 ) {
+  let restoreVisibility: (() => void) | null = null;
+
   try {
+    console.log("========================================");
+    console.log("Starting Agricultural PDF export with charts...");
+    console.log("========================================");
+
+    // Force render all charts before capturing
+    console.log("Force rendering all charts...");
+    restoreVisibility = await forceRenderAgriculturalCharts();
+
     const pdf = new jsPDF({
       orientation: "portrait",
       unit: "mm",
       format: "a4",
     });
 
-    let yPos = 20;
-    const leftMargin = 20;
-    const pageWidth = 170; // 210mm - 40mm margins
+    let yPos = 25;
+    const leftMargin = 25;
+    const rightMargin = 25;
+    const pageWidth = 210;
+    const pageHeight = 297;
+    const contentWidth = pageWidth - leftMargin - rightMargin;
 
-    // Helper to add colored box
-    const addColorBox = (
-      color: [number, number, number],
-      height: number = 8
-    ) => {
-      pdf.setFillColor(color[0], color[1], color[2]);
-      pdf.rect(leftMargin, yPos, pageWidth, height, "F");
-      yPos += height;
+    // Helper function to check if we need a new page
+    const checkPageBreak = (requiredSpace: number = 20) => {
+      if (yPos + requiredSpace > pageHeight - 25) {
+        pdf.addPage();
+        yPos = 25;
+        return true;
+      }
+      return false;
     };
 
-    // Helper function to add text with word wrap
+    // Helper function to add text with professional formatting
     const addText = (
       text: string,
-      fontSize: number = 10,
+      fontSize: number = 11,
       isBold: boolean = false,
-      color: [number, number, number] = [0, 0, 0]
+      color: [number, number, number] = [40, 40, 40],
+      lineHeight: number = 1.5,
+      indent: number = 0
     ) => {
       pdf.setFontSize(fontSize);
       pdf.setTextColor(color[0], color[1], color[2]);
-      if (isBold) {
-        pdf.setFont("helvetica", "bold");
-      } else {
-        pdf.setFont("helvetica", "normal");
-      }
+      pdf.setFont("helvetica", isBold ? "bold" : "normal");
 
-      const lines = pdf.splitTextToSize(text, pageWidth);
+      const lines = pdf.splitTextToSize(text, contentWidth - indent);
       lines.forEach((line: string) => {
-        if (yPos > 270) {
-          pdf.addPage();
-          yPos = 20;
-        }
-        pdf.text(line, leftMargin, yPos);
-        yPos += fontSize * 0.5;
+        checkPageBreak();
+        pdf.text(line, leftMargin + indent, yPos);
+        yPos += fontSize * 0.35 * lineHeight;
       });
-      yPos += 3;
+      yPos += 2;
     };
 
-    // Title with green background
+    // Helper function to add bullet points
+    const addBullet = (
+      text: string,
+      fontSize: number = 11,
+      bulletChar: string = "•"
+    ) => {
+      checkPageBreak();
+      pdf.setFontSize(fontSize);
+      pdf.setTextColor(40, 40, 40);
+      pdf.setFont("helvetica", "normal");
+
+      pdf.text(bulletChar, leftMargin + 2, yPos);
+      const lines = pdf.splitTextToSize(text, contentWidth - 8);
+      lines.forEach((line: string, index: number) => {
+        if (index > 0) checkPageBreak();
+        pdf.text(line, leftMargin + 8, yPos);
+        yPos += fontSize * 0.35 * 1.5;
+      });
+      yPos += 1;
+    };
+
+    // Helper function to add section headers
+    const addSectionHeader = (
+      title: string,
+      color: [number, number, number],
+      level: number = 1 // 1 = main section, 2 = subsection
+    ) => {
+      checkPageBreak(level === 1 ? 25 : 15);
+
+      if (level === 1) {
+        // Main section header with colored background bar
+        yPos += 3;
+        pdf.setFillColor(color[0], color[1], color[2]);
+        pdf.rect(leftMargin, yPos - 2, contentWidth, 10, "F");
+
+        pdf.setTextColor(255, 255, 255);
+        pdf.setFontSize(16);
+        pdf.setFont("helvetica", "bold");
+        pdf.text(title, leftMargin + 3, yPos + 5);
+        yPos += 13;
+      } else {
+        // Subsection header
+        yPos += 2;
+        pdf.setTextColor(color[0], color[1], color[2]);
+        pdf.setFontSize(13);
+        pdf.setFont("helvetica", "bold");
+        pdf.text(title, leftMargin, yPos);
+        yPos += 8;
+      }
+    };
+
+    // Helper function to add professional footer
+    const addFooter = () => {
+      const footerY = pageHeight - 15;
+
+      // Separator line
+      pdf.setDrawColor(200, 200, 200);
+      pdf.setLineWidth(0.3);
+      pdf.line(leftMargin, footerY - 3, pageWidth - rightMargin, footerY - 3);
+
+      // Footer text
+      pdf.setFontSize(8);
+      pdf.setTextColor(120, 120, 120);
+      pdf.setFont("helvetica", "normal");
+      pdf.text("AgriClime Sentinel - Agricultural Climate Risk Assessment", leftMargin, footerY);
+
+      pdf.setFont("helvetica", "italic");
+      pdf.text(
+        `Page ${pdf.getCurrentPageInfo().pageNumber}`,
+        leftMargin + contentWidth,
+        footerY,
+        { align: "right" }
+      );
+    };
+
+    // ==================== TITLE PAGE ====================
+
+    // Decorative top bar
     pdf.setFillColor(34, 197, 94); // Green
-    pdf.rect(leftMargin, yPos, pageWidth, 12, "F");
+    pdf.rect(0, 0, pageWidth, 15, "F");
 
-    pdf.setTextColor(255, 255, 255);
+    // Main title
+    yPos = 80;
+    pdf.setTextColor(34, 197, 94);
+    pdf.setFontSize(28);
+    pdf.setFont("helvetica", "bold");
+    pdf.text("AGRICULTURAL CLIMATE", pageWidth / 2, yPos, { align: "center" });
+    yPos += 12;
+    pdf.text("RISK ASSESSMENT", pageWidth / 2, yPos, { align: "center" });
+
+    // Subtitle
+    yPos += 20;
+    pdf.setTextColor(80, 80, 80);
     pdf.setFontSize(18);
-    pdf.setFont("helvetica", "bold");
-    pdf.text("Climate Risk Report", leftMargin + 3, yPos + 8);
-    yPos += 15;
-
-    // Location
-    pdf.setTextColor(0, 0, 0);
-    pdf.setFontSize(14);
-    pdf.setFont("helvetica", "bold");
-    pdf.text(`${data.county.name}, ${data.county.state}`, leftMargin, yPos);
-    yPos += 7;
-
-    pdf.setFontSize(10);
     pdf.setFont("helvetica", "normal");
-    pdf.text(`Generated: ${new Date().toLocaleString()}`, leftMargin, yPos);
+    pdf.text(`${data.county.name}, ${data.county.state}`, pageWidth / 2, yPos, { align: "center" });
+
+    // Date
+    yPos += 15;
+    pdf.setFontSize(12);
+    pdf.setTextColor(120, 120, 120);
+    const reportDate = new Date().toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+    pdf.text(reportDate, pageWidth / 2, yPos, { align: "center" });
+
+    // Decorative middle section
+    yPos += 30;
+    pdf.setDrawColor(34, 197, 94);
+    pdf.setLineWidth(0.5);
+    pdf.line(pageWidth / 2 - 40, yPos, pageWidth / 2 + 40, yPos);
+
+    // Report type
     yPos += 10;
+    pdf.setFontSize(11);
+    pdf.setTextColor(100, 100, 100);
+    pdf.setFont("helvetica", "italic");
+    pdf.text("Comprehensive Agricultural Climate Analysis", pageWidth / 2, yPos, { align: "center" });
+    pdf.text("Historical Trends & Risk Assessment", pageWidth / 2, yPos + 6, { align: "center" });
 
-    // Current Climate Conditions
-    pdf.setFillColor(59, 130, 246); // Blue
-    pdf.rect(leftMargin, yPos, pageWidth, 8, "F");
+    // Decorative bottom bar
+    pdf.setFillColor(34, 197, 94);
+    pdf.rect(0, pageHeight - 15, pageWidth, 15, "F");
 
     pdf.setTextColor(255, 255, 255);
-    pdf.setFontSize(13);
+    pdf.setFontSize(10);
     pdf.setFont("helvetica", "bold");
-    pdf.text("Current Climate Conditions", leftMargin + 3, yPos + 5.5);
-    yPos += 11;
+    pdf.text("AgriClime Sentinel", pageWidth / 2, pageHeight - 7, { align: "center" });
 
-    pdf.setTextColor(0, 0, 0);
+    // Start new page for content
+    pdf.addPage();
+    yPos = 25;
+
+    // ==================== SECTION 1: EXECUTIVE SUMMARY ====================
+    addSectionHeader("1. Executive Summary", [34, 197, 94]);
+
     const climate = data.current_climate;
-    if (climate) {
-      const temp = climate.temperature_avg;
-      const tempMax = climate.temperature_max;
-      const tempMin = climate.temperature_min;
-      const precip = climate.precipitation;
-      const soilMoisture = climate.soil_moisture;
-      const droughtIdx = climate.drought_index;
-
-      addText(
-        `Temperature (Avg): ${
-          temp !== null && temp !== undefined ? temp.toFixed(1) : "N/A"
-        }°C`
-      );
-      addText(
-        `Temperature (Max): ${
-          tempMax !== null && tempMax !== undefined ? tempMax.toFixed(1) : "N/A"
-        }°C`
-      );
-      addText(
-        `Temperature (Min): ${
-          tempMin !== null && tempMin !== undefined ? tempMin.toFixed(1) : "N/A"
-        }°C`
-      );
-      addText(
-        `Precipitation: ${
-          precip !== null && precip !== undefined ? precip.toFixed(2) : "N/A"
-        } mm`
-      );
-      addText(
-        `Soil Moisture: ${
-          soilMoisture !== null && soilMoisture !== undefined
-            ? soilMoisture.toFixed(1)
-            : "N/A"
-        }%`
-      );
-      addText(
-        `Drought Index: ${
-          droughtIdx !== null && droughtIdx !== undefined
-            ? droughtIdx.toFixed(0)
-            : "N/A"
-        } (0=None, 5=Exceptional)`
-      );
-    } else {
-      addText("No current climate data available");
-    }
-    yPos += 5;
-
-    // Agricultural Metrics
-    pdf.setFillColor(249, 115, 22); // Orange
-    pdf.rect(leftMargin, yPos, pageWidth, 8, "F");
-
-    pdf.setTextColor(255, 255, 255);
-    pdf.setFontSize(13);
-    pdf.setFont("helvetica", "bold");
-    pdf.text("Agricultural Metrics", leftMargin + 3, yPos + 5.5);
-    yPos += 11;
-
-    pdf.setTextColor(0, 0, 0);
     const gdd = data.growing_degree_days;
     const heatDays = data.extreme_heat_days_ytd;
 
     addText(
-      `Growing Degree Days (YTD): ${
-        gdd !== null && gdd !== undefined ? gdd.toFixed(0) : "N/A"
-      }`
-    );
-    addText(
-      `Extreme Heat Days (YTD): ${
-        heatDays !== null && heatDays !== undefined ? heatDays : "N/A"
-      }`
+      `This report provides a comprehensive agricultural climate risk assessment for ${data.county.name}, ${data.county.state}. ` +
+      `The analysis includes current climate conditions, agricultural metrics, historical drought trends, and extreme weather patterns ` +
+      `spanning multiple decades.`,
+      11, false, [40, 40, 40], 1.6
     );
 
+    yPos += 3;
+    addText("Key Findings:", 12, true, [34, 197, 94]);
+
+    if (climate) {
+      const droughtIdx = climate.drought_index ?? 0;
+      const droughtLevel = droughtIdx === 0 ? "None" :
+                          droughtIdx === 1 ? "Abnormally Dry" :
+                          droughtIdx === 2 ? "Moderate Drought" :
+                          droughtIdx === 3 ? "Severe Drought" :
+                          droughtIdx === 4 ? "Extreme Drought" : "Exceptional Drought";
+
+      addBullet(`Current drought status: ${droughtLevel} (Index: ${droughtIdx})`);
+      addBullet(`Average temperature: ${climate.temperature_avg?.toFixed(1) ?? "N/A"}°C`);
+      addBullet(`Soil moisture level: ${climate.soil_moisture?.toFixed(1) ?? "N/A"}%`);
+    }
+
+    if (gdd !== null && gdd !== undefined) {
+      addBullet(`Growing Degree Days (YTD): ${gdd.toFixed(0)} GDD`);
+    }
+
+    if (heatDays !== null && heatDays !== undefined) {
+      addBullet(`Extreme heat days this year: ${heatDays} days above 35°C`);
+    }
+
+    yPos += 5;
+
+    // ==================== SECTION 2: CURRENT CLIMATE CONDITIONS ====================
+    addSectionHeader("2. Current Climate Conditions", [59, 130, 246]);
+
+    if (climate) {
+      addSectionHeader("2.1 Temperature Metrics", [59, 130, 246], 2);
+      addBullet(`Average Temperature: ${climate.temperature_avg?.toFixed(1) ?? "N/A"}°C`);
+      addBullet(`Maximum Temperature: ${climate.temperature_max?.toFixed(1) ?? "N/A"}°C`);
+      addBullet(`Minimum Temperature: ${climate.temperature_min?.toFixed(1) ?? "N/A"}°C`);
+
+      yPos += 3;
+      addSectionHeader("2.2 Precipitation & Soil Moisture", [59, 130, 246], 2);
+      addBullet(`Current Precipitation: ${climate.precipitation?.toFixed(2) ?? "N/A"} mm`);
+      addBullet(`Soil Moisture: ${climate.soil_moisture?.toFixed(1) ?? "N/A"}%`);
+
+      yPos += 3;
+      addSectionHeader("2.3 Drought Status", [59, 130, 246], 2);
+      const droughtIdx = climate.drought_index ?? 0;
+      addBullet(`Drought Index: ${droughtIdx} (Scale: 0=None, 5=Exceptional)`);
+
+      const droughtDescription = droughtIdx === 0 ? "No drought conditions detected." :
+                                 droughtIdx === 1 ? "Abnormally dry conditions. Short-term dryness slowing planting, growth of crops." :
+                                 droughtIdx === 2 ? "Moderate drought. Some damage to crops; streams, reservoirs low." :
+                                 droughtIdx === 3 ? "Severe drought. Crop losses likely; water shortages common." :
+                                 droughtIdx === 4 ? "Extreme drought. Major crop losses; widespread water shortages." :
+                                 "Exceptional drought. Exceptional and widespread crop losses; water emergencies.";
+
+      addText(droughtDescription, 10, false, [80, 80, 80], 1.5, 5);
+    } else {
+      addText("No current climate data available for this location.", 11, false, [150, 150, 150]);
+    }
+
+    yPos += 5;
+
+    // ==================== SECTION 3: AGRICULTURAL METRICS ====================
+    addSectionHeader("3. Agricultural Metrics", [249, 115, 22]);
+
+    addSectionHeader("3.1 Growing Degree Days (GDD)", [249, 115, 22], 2);
+    if (gdd !== null && gdd !== undefined) {
+      addBullet(`Year-to-Date GDD: ${gdd.toFixed(0)} degree-days`);
+      addText(
+        "Growing Degree Days (GDD) measure heat accumulation for crop development. Higher GDD values indicate " +
+        "more favorable conditions for crop growth, while lower values may indicate delayed development.",
+        10, false, [80, 80, 80], 1.5, 5
+      );
+    } else {
+      addText("GDD data not available for this location.", 11, false, [150, 150, 150]);
+    }
+
+    yPos += 3;
+    addSectionHeader("3.2 Extreme Heat Events", [249, 115, 22], 2);
+    if (heatDays !== null && heatDays !== undefined) {
+      addBullet(`Days Above 35°C (YTD): ${heatDays} days`);
+      addText(
+        "Extreme heat days (>35°C) can cause heat stress in crops, reduce yields, and increase irrigation demands. " +
+        "Prolonged heat waves are particularly damaging during critical growth stages.",
+        10, false, [80, 80, 80], 1.5, 5
+      );
+    } else {
+      addText("Extreme heat data not available for this location.", 11, false, [150, 150, 150]);
+    }
+
+    yPos += 3;
+    addSectionHeader("3.3 Precipitation Analysis", [249, 115, 22], 2);
     if (data.precipitation_vs_avg) {
       const pctDiff = data.precipitation_vs_avg.percent_difference;
       const current = data.precipitation_vs_avg.current;
       const historical = data.precipitation_vs_avg.historical_avg;
 
-      addText(
-        `Current YTD Precipitation: ${
-          current !== null && current !== undefined ? current.toFixed(1) : "N/A"
-        } mm`
-      );
-      addText(
-        `Historical Average: ${
-          historical !== null && historical !== undefined
-            ? historical.toFixed(1)
-            : "N/A"
-        } mm`
-      );
-      addText(
-        `Difference: ${
-          pctDiff !== null && pctDiff !== undefined
-            ? (pctDiff > 0 ? "+" : "") + pctDiff.toFixed(1)
-            : "N/A"
-        }%`
-      );
-    }
-    yPos += 5;
+      addBullet(`Current YTD Precipitation: ${current?.toFixed(1) ?? "N/A"} mm`);
+      addBullet(`Historical Average: ${historical?.toFixed(1) ?? "N/A"} mm`);
+      addBullet(`Difference from Average: ${pctDiff !== null && pctDiff !== undefined ? (pctDiff > 0 ? "+" : "") + pctDiff.toFixed(1) : "N/A"}%`);
 
-    // Historical Trends
-    if (data.historical_trends && data.historical_trends.length > 0) {
-      pdf.setFillColor(168, 85, 247); // Purple
-      pdf.rect(leftMargin, yPos, pageWidth, 8, "F");
-
-      pdf.setTextColor(255, 255, 255);
-      pdf.setFontSize(13);
-      pdf.setFont("helvetica", "bold");
-      pdf.text("Historical Trends (Last 10 Years)", leftMargin + 3, yPos + 5.5);
-      yPos += 11;
-
-      pdf.setTextColor(0, 0, 0);
-      const recentTrends = data.historical_trends.slice(-10);
-
-      // Add table header
-      addText(
-        "Year | Drought Events | Avg Severity | Heat Days | Precip (mm)",
-        9
-      );
-      addText(
-        "----------------------------------------------------------------",
-        9
-      );
-
-      recentTrends.forEach((trend) => {
-        const year = trend.year;
-        const droughtFreq = trend.drought_frequency;
-        const severity = trend.drought_severity_avg.toFixed(1);
-        const heatDays = trend.extreme_heat_days;
-        const precip = trend.precipitation_total.toFixed(0);
+      if (pctDiff !== null && pctDiff !== undefined) {
+        const precipStatus = pctDiff > 20 ? "significantly above average (potential flooding risk)" :
+                            pctDiff > 10 ? "above average (favorable for most crops)" :
+                            pctDiff > -10 ? "near average (normal conditions)" :
+                            pctDiff > -20 ? "below average (monitor for drought)" :
+                            "significantly below average (drought conditions likely)";
 
         addText(
-          `${year} | ${droughtFreq
-            .toString()
-            .padStart(14)} | ${severity.padStart(12)} | ${heatDays
-            .toString()
-            .padStart(9)} | ${precip.padStart(10)}`,
-          9
+          `Precipitation is ${precipStatus}.`,
+          10, false, [80, 80, 80], 1.5, 5
         );
-      });
+      }
     } else {
-      addText("Historical Trends", 14, true);
-      addText("No historical trend data available");
+      addText("Precipitation comparison data not available.", 11, false, [150, 150, 150]);
     }
+
     yPos += 5;
 
-    // Footer
-    addText("Data Source", 12, true);
-    addText("AgriClime Sentinel - Climate Risk Dashboard", 9);
-    addText("https://github.com/clevernat/AgriClime-Sentinel", 9);
-    addText(`Report generated: ${new Date().toLocaleString()}`, 9);
+    // ==================== SECTION 4: HISTORICAL TRENDS & VISUALIZATIONS ====================
+    addSectionHeader("4. Historical Climate Trends", [168, 85, 247]);
+
+    if (data.historical_trends && data.historical_trends.length > 0) {
+      addText(
+        "This section presents long-term climate trends based on historical data analysis. " +
+        "The visualizations below show drought frequency, severity patterns, and extreme heat events over time.",
+        11, false, [40, 40, 40], 1.6
+      );
+
+      yPos += 5;
+
+      // ========== CHART 1: Historical Drought Trends ==========
+      addSectionHeader("4.1 Drought Frequency and Severity (50-Year Analysis)", [168, 85, 247], 2);
+
+      checkPageBreak(120); // Ensure space for chart
+
+      const droughtChartElement = document.getElementById("historical-trends-chart");
+      if (droughtChartElement) {
+        try {
+          console.log("Capturing Historical Drought Trends chart...");
+          const canvas = await html2canvas(droughtChartElement, {
+            scale: 2,
+            backgroundColor: "#f9fafb",
+            logging: false,
+          });
+
+          const imgData = canvas.toDataURL("image/png");
+          const imgWidth = contentWidth;
+          const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+          pdf.addImage(imgData, "PNG", leftMargin, yPos, imgWidth, imgHeight);
+          yPos += imgHeight + 8;
+
+          console.log("✅ Historical Drought Trends chart captured");
+        } catch (error) {
+          console.error("Error capturing drought chart:", error);
+          addText("⚠ Chart visualization unavailable", 10, false, [150, 150, 150]);
+          yPos += 5;
+        }
+      } else {
+        addText("⚠ Drought trends chart not found", 10, false, [150, 150, 150]);
+        yPos += 5;
+      }
+
+      addText(
+        "The chart above shows the historical pattern of drought events and their average severity. " +
+        "Increasing trends may indicate growing climate risks for agricultural operations.",
+        10, false, [80, 80, 80], 1.5, 5
+      );
+
+      yPos += 5;
+
+      // ========== CHART 2: Extreme Heat Days ==========
+      checkPageBreak(120); // Ensure space for chart
+
+      addSectionHeader("4.2 Extreme Heat Days by Year", [168, 85, 247], 2);
+
+      // Find the extreme heat chart (it's the second chart in the dashboard)
+      const dashboardContent = document.getElementById("regional-dashboard-content");
+      if (dashboardContent) {
+        const allCharts = dashboardContent.querySelectorAll(".recharts-wrapper");
+        if (allCharts.length > 1) {
+          try {
+            console.log("Capturing Extreme Heat Days chart...");
+            const heatChartParent = allCharts[1].parentElement;
+            if (heatChartParent) {
+              const canvas = await html2canvas(heatChartParent, {
+                scale: 2,
+                backgroundColor: "#f9fafb",
+                logging: false,
+              });
+
+              const imgData = canvas.toDataURL("image/png");
+              const imgWidth = contentWidth;
+              const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+              pdf.addImage(imgData, "PNG", leftMargin, yPos, imgWidth, imgHeight);
+              yPos += imgHeight + 8;
+
+              console.log("✅ Extreme Heat Days chart captured");
+            }
+          } catch (error) {
+            console.error("Error capturing heat chart:", error);
+            addText("⚠ Chart visualization unavailable", 10, false, [150, 150, 150]);
+            yPos += 5;
+          }
+        }
+      }
+
+      addText(
+        "Days exceeding 35°C can cause significant crop stress, particularly during flowering and grain-filling stages. " +
+        "Increasing frequency of extreme heat days may require adaptation strategies.",
+        10, false, [80, 80, 80], 1.5, 5
+      );
+
+      yPos += 5;
+
+      // ========== DATA TABLE ==========
+      checkPageBreak(60);
+
+      addSectionHeader("4.3 Historical Data Summary (Last 10 Years)", [168, 85, 247], 2);
+
+      const recentTrends = data.historical_trends.slice(-10);
+
+      // Table header
+      pdf.setFontSize(9);
+      pdf.setFont("helvetica", "bold");
+      pdf.setTextColor(60, 60, 60);
+      pdf.text("Year", leftMargin + 5, yPos);
+      pdf.text("Drought Events", leftMargin + 30, yPos);
+      pdf.text("Avg Severity", leftMargin + 70, yPos);
+      pdf.text("Heat Days", leftMargin + 110, yPos);
+      pdf.text("Precip (mm)", leftMargin + 145, yPos);
+      yPos += 5;
+
+      // Table separator
+      pdf.setDrawColor(200, 200, 200);
+      pdf.line(leftMargin, yPos, leftMargin + contentWidth, yPos);
+      yPos += 4;
+
+      // Table rows
+      pdf.setFont("helvetica", "normal");
+      pdf.setTextColor(40, 40, 40);
+      recentTrends.forEach((trend, index) => {
+        checkPageBreak();
+
+        // Alternate row background
+        if (index % 2 === 0) {
+          pdf.setFillColor(248, 248, 248);
+          pdf.rect(leftMargin, yPos - 3, contentWidth, 6, "F");
+        }
+
+        pdf.text(trend.year.toString(), leftMargin + 5, yPos);
+        pdf.text(trend.drought_frequency.toString(), leftMargin + 30, yPos);
+        pdf.text(trend.drought_severity_avg.toFixed(1), leftMargin + 70, yPos);
+        pdf.text(trend.extreme_heat_days.toString(), leftMargin + 110, yPos);
+        pdf.text(trend.precipitation_total.toFixed(0), leftMargin + 145, yPos);
+        yPos += 6;
+      });
+
+    } else {
+      addText("No historical trend data available for this location.", 11, false, [150, 150, 150]);
+    }
+
+    yPos += 5;
+
+    // ==================== SECTION 5: RECOMMENDATIONS ====================
+    checkPageBreak(80);
+    addSectionHeader("5. Agricultural Risk Management Recommendations", [220, 38, 38]);
+
+    addText(
+      "Based on the climate analysis presented in this report, the following recommendations are provided " +
+      "for agricultural risk management and adaptation strategies:",
+      11, false, [40, 40, 40], 1.6
+    );
+
+    yPos += 3;
+
+    // Drought-specific recommendations
+    if (climate && climate.drought_index && climate.drought_index >= 2) {
+      addSectionHeader("5.1 Drought Mitigation Strategies", [220, 38, 38], 2);
+      addBullet("Implement water conservation practices and efficient irrigation systems");
+      addBullet("Consider drought-resistant crop varieties for future planting seasons");
+      addBullet("Monitor soil moisture levels regularly to optimize irrigation timing");
+      addBullet("Develop contingency plans for water supply shortages");
+      yPos += 3;
+    }
+
+    // Heat stress recommendations
+    if (heatDays && heatDays > 10) {
+      addSectionHeader("5.2 Heat Stress Management", [220, 38, 38], 2);
+      addBullet("Adjust planting dates to avoid extreme heat during critical growth stages");
+      addBullet("Increase irrigation frequency during heat waves");
+      addBullet("Consider heat-tolerant crop varieties");
+      addBullet("Implement shade structures or windbreaks where feasible");
+      yPos += 3;
+    }
+
+    // General recommendations
+    addSectionHeader("5.3 Long-Term Climate Adaptation", [220, 38, 38], 2);
+    addBullet("Diversify crop selection to spread climate risk");
+    addBullet("Invest in climate monitoring and early warning systems");
+    addBullet("Improve soil health to enhance resilience to climate extremes");
+    addBullet("Consider crop insurance options to mitigate financial risks");
+    addBullet("Stay informed about regional climate forecasts and agricultural advisories");
+
+    yPos += 8;
+
+    // ==================== DATA SOURCES & METHODOLOGY ====================
+    checkPageBreak(40);
+    addSectionHeader("Data Sources & Methodology", [100, 100, 100]);
+
+    addText(
+      "This report integrates data from multiple authoritative sources including NOAA climate databases, " +
+      "USDA agricultural statistics, and regional weather monitoring networks. Historical trends are analyzed " +
+      "using statistical methods to identify significant patterns and anomalies.",
+      10, false, [80, 80, 80], 1.5
+    );
+
+    yPos += 5;
+
+    // ==================== FOOTER ON ALL PAGES ====================
+    const totalPages = pdf.getNumberOfPages();
+    for (let i = 1; i <= totalPages; i++) {
+      pdf.setPage(i);
+
+      const footerY = pageHeight - 15;
+
+      // Separator line
+      pdf.setDrawColor(200, 200, 200);
+      pdf.setLineWidth(0.3);
+      pdf.line(leftMargin, footerY - 3, pageWidth - rightMargin, footerY - 3);
+
+      // Footer text - left side
+      pdf.setFontSize(7);
+      pdf.setTextColor(120, 120, 120);
+      pdf.setFont("helvetica", "normal");
+      pdf.text("AgriClime Sentinel - Agricultural Climate Risk Assessment", leftMargin, footerY);
+
+      // Footer text - center
+      pdf.setFont("helvetica", "italic");
+      pdf.text(
+        "github.com/clevernat/AgriClime-Sentinel",
+        pageWidth / 2,
+        footerY,
+        { align: "center" }
+      );
+
+      // Footer text - right side (page number)
+      pdf.text(
+        `Page ${i} of ${totalPages}`,
+        pageWidth - rightMargin,
+        footerY,
+        { align: "right" }
+      );
+
+      // Bottom line - date
+      pdf.setFontSize(7);
+      pdf.setTextColor(140, 140, 140);
+      pdf.text(
+        `Generated: ${new Date().toLocaleDateString('en-US')}`,
+        leftMargin,
+        pageHeight - 8
+      );
+    }
 
     // Add metadata
     pdf.setProperties({
-      title: `Climate Report - ${data.county.name}, ${data.county.state}`,
-      subject: "Agricultural Climate Risk Assessment",
+      title: `Agricultural Climate Risk Assessment - ${data.county.name}, ${data.county.state}`,
+      subject: "Agricultural Climate Risk Assessment with Historical Trends",
       author: "AgriClime Sentinel",
-      keywords: "climate, agriculture, drought, weather",
+      keywords: "climate, agriculture, drought, weather, risk assessment, historical trends",
       creator: "AgriClime Sentinel",
     });
 
+    console.log("Saving PDF...");
     pdf.save(filename);
+    console.log("✅ Agricultural PDF export complete!");
   } catch (error) {
-    console.error("Error generating PDF:", error);
+    console.error("Error generating Agricultural PDF:", error);
     throw new Error(
       `Failed to export PDF: ${
         error instanceof Error ? error.message : "Unknown error"
       }`
     );
+  } finally {
+    // Restore original visibility states
+    if (restoreVisibility) {
+      restoreVisibility();
+    }
   }
 }
 
