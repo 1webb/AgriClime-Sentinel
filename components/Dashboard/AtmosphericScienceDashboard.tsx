@@ -238,10 +238,10 @@ export default function AtmosphericScienceDashboard({
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-2 sm:p-4 animate-fadeIn overflow-y-auto">
-      <div className="bg-white rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-7xl max-h-[98vh] sm:max-h-[95vh] overflow-hidden animate-scaleIn flex flex-col my-2 sm:my-0">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start sm:items-center justify-center z-[9999] p-0 sm:p-4 animate-fadeIn overflow-y-auto">
+      <div className="bg-white rounded-none sm:rounded-xl md:rounded-2xl shadow-2xl w-full max-w-7xl min-h-screen sm:min-h-0 sm:max-h-[95vh] animate-scaleIn flex flex-col">
         {/* Header */}
-        <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-3 sm:p-4 md:p-6 flex justify-between items-start sm:items-center">
+        <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-3 sm:p-4 md:p-6 flex justify-between items-start sm:items-center flex-shrink-0">
           <div className="flex-1 min-w-0">
             <h2 className="text-lg sm:text-2xl md:text-3xl font-bold truncate">
               Atmospheric Science Dashboard
@@ -263,10 +263,10 @@ export default function AtmosphericScienceDashboard({
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b-2 border-gray-300 bg-white overflow-x-auto scrollbar-hide shadow-sm">
+        <div className="flex border-b-2 border-gray-300 bg-white overflow-x-auto scrollbar-hide shadow-sm flex-shrink-0">
           <button
             onClick={() => setActiveTab("alerts")}
-            className={`flex-shrink-0 py-3 px-3 sm:px-5 md:px-8 font-bold text-xs sm:text-sm md:text-base transition-all whitespace-nowrap flex items-center gap-1.5 sm:gap-2 ${
+            className={`flex-shrink-0 py-3 px-4 sm:px-6 md:px-8 font-bold text-sm sm:text-base transition-all whitespace-nowrap flex items-center gap-2 ${
               activeTab === "alerts"
                 ? "bg-blue-50 text-blue-700 border-b-4 border-blue-600"
                 : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
@@ -277,7 +277,7 @@ export default function AtmosphericScienceDashboard({
           </button>
           <button
             onClick={() => setActiveTab("severe")}
-            className={`flex-shrink-0 py-3 px-3 sm:px-5 md:px-8 font-bold text-xs sm:text-sm md:text-base transition-all whitespace-nowrap flex items-center gap-1.5 sm:gap-2 ${
+            className={`flex-shrink-0 py-3 px-4 sm:px-6 md:px-8 font-bold text-sm sm:text-base transition-all whitespace-nowrap flex items-center gap-2 ${
               activeTab === "severe"
                 ? "bg-blue-50 text-blue-700 border-b-4 border-blue-600"
                 : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
@@ -288,7 +288,7 @@ export default function AtmosphericScienceDashboard({
           </button>
           <button
             onClick={() => setActiveTab("airquality")}
-            className={`flex-shrink-0 py-3 px-3 sm:px-5 md:px-8 font-bold text-xs sm:text-sm md:text-base transition-all whitespace-nowrap flex items-center gap-1.5 sm:gap-2 ${
+            className={`flex-shrink-0 py-3 px-4 sm:px-6 md:px-8 font-bold text-sm sm:text-base transition-all whitespace-nowrap flex items-center gap-2 ${
               activeTab === "airquality"
                 ? "bg-blue-50 text-blue-700 border-b-4 border-blue-600"
                 : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
@@ -299,7 +299,7 @@ export default function AtmosphericScienceDashboard({
           </button>
           <button
             onClick={() => setActiveTab("trends")}
-            className={`flex-shrink-0 py-3 px-3 sm:px-5 md:px-8 font-bold text-xs sm:text-sm md:text-base transition-all whitespace-nowrap flex items-center gap-1.5 sm:gap-2 ${
+            className={`flex-shrink-0 py-3 px-4 sm:px-6 md:px-8 font-bold text-sm sm:text-base transition-all whitespace-nowrap flex items-center gap-2 ${
               activeTab === "trends"
                 ? "bg-blue-50 text-blue-700 border-b-4 border-blue-600"
                 : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
