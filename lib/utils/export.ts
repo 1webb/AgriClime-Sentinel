@@ -156,49 +156,139 @@ export async function exportToPDF(
 
     // Current Climate Conditions
     addText("Current Climate Conditions", 14, true);
-    if (data.currentClimate) {
+    const climate = data.current_climate;
+    if (climate) {
+      const temp = climate.temperature_avg;
+      const tempMax = climate.temperature_max;
+      const tempMin = climate.temperature_min;
+      const precip = climate.precipitation;
+      const soilMoisture = climate.soil_moisture;
+      const droughtIdx = climate.drought_index;
+
       addText(
-        `Temperature: ${
-          data.currentClimate.temperature_avg?.toFixed(1) || "N/A"
-        }°F`
+        `Temperature (Avg): ${
+          temp !== null && temp !== undefined ? temp.toFixed(1) : "N/A"
+        }°C`
+      );
+      addText(
+        `Temperature (Max): ${
+          tempMax !== null && tempMax !== undefined ? tempMax.toFixed(1) : "N/A"
+        }°C`
+      );
+      addText(
+        `Temperature (Min): ${
+          tempMin !== null && tempMin !== undefined ? tempMin.toFixed(1) : "N/A"
+        }°C`
       );
       addText(
         `Precipitation: ${
-          data.currentClimate.precipitation?.toFixed(2) || "N/A"
-        } inches`
+          precip !== null && precip !== undefined ? precip.toFixed(2) : "N/A"
+        } mm`
       );
       addText(
         `Soil Moisture: ${
-          data.currentClimate.soil_moisture?.toFixed(1) || "N/A"
+          soilMoisture !== null && soilMoisture !== undefined
+            ? soilMoisture.toFixed(1)
+            : "N/A"
         }%`
       );
-      addText(`Drought Status: ${data.currentClimate.drought_status || "N/A"}`);
+      addText(
+        `Drought Index: ${
+          droughtIdx !== null && droughtIdx !== undefined
+            ? droughtIdx.toFixed(0)
+            : "N/A"
+        } (0=None, 5=Exceptional)`
+      );
+    } else {
+      addText("No current climate data available");
     }
     yPos += 5;
 
     // Agricultural Metrics
     addText("Agricultural Metrics", 14, true);
-    addText(`Growing Degree Days (YTD): ${data.growingDegreeDays || "N/A"}`);
-    addText(`Extreme Heat Days (YTD): ${data.extremeHeatDaysYtd || "N/A"}`);
+    const gdd = data.growing_degree_days;
+    const heatDays = data.extreme_heat_days_ytd;
 
-    if (data.precipitationVsAvg) {
-      const pctDiff =
-        data.precipitationVsAvg.percent_difference?.toFixed(1) || "0";
-      addText(`Precipitation vs Average: ${pctDiff}%`);
+    addText(
+      `Growing Degree Days (YTD): ${
+        gdd !== null && gdd !== undefined ? gdd.toFixed(0) : "N/A"
+      }`
+    );
+    addText(
+      `Extreme Heat Days (YTD): ${
+        heatDays !== null && heatDays !== undefined ? heatDays : "N/A"
+      }`
+    );
+
+    if (data.precipitation_vs_avg) {
+      const pctDiff = data.precipitation_vs_avg.percent_difference;
+      const current = data.precipitation_vs_avg.current;
+      const historical = data.precipitation_vs_avg.historical_avg;
+
+      addText(
+        `Current YTD Precipitation: ${
+          current !== null && current !== undefined ? current.toFixed(1) : "N/A"
+        } mm`
+      );
+      addText(
+        `Historical Average: ${
+          historical !== null && historical !== undefined
+            ? historical.toFixed(1)
+            : "N/A"
+        } mm`
+      );
+      addText(
+        `Difference: ${
+          pctDiff !== null && pctDiff !== undefined
+            ? (pctDiff > 0 ? "+" : "") + pctDiff.toFixed(1)
+            : "N/A"
+        }%`
+      );
     }
     yPos += 5;
 
     // Historical Trends
-    if (data.historicalTrends && data.historicalTrends.length > 0) {
+    if (data.historical_trends && data.historical_trends.length > 0) {
       addText("Historical Trends (Last 10 Years)", 14, true);
-      data.historicalTrends.slice(0, 10).forEach((trend: any) => {
+      const recentTrends = data.historical_trends.slice(-10);
+
+      // Add table header
+      addText(
+        "Year | Drought Events | Avg Severity | Heat Days | Precip (mm)",
+        9
+      );
+      addText(
+        "----------------------------------------------------------------",
+        9
+      );
+
+      recentTrends.forEach((trend) => {
+        const year = trend.year;
+        const droughtFreq = trend.drought_frequency;
+        const severity = trend.drought_severity_avg.toFixed(1);
+        const heatDays = trend.extreme_heat_days;
+        const precip = trend.precipitation_total.toFixed(0);
+
         addText(
-          `${trend.year}: Temp ${trend.avg_temp?.toFixed(
-            1
-          )}°F, Precip ${trend.total_precip?.toFixed(1)}" `
+          `${year} | ${droughtFreq
+            .toString()
+            .padStart(14)} | ${severity.padStart(12)} | ${heatDays
+            .toString()
+            .padStart(9)} | ${precip.padStart(10)}`,
+          9
         );
       });
+    } else {
+      addText("Historical Trends", 14, true);
+      addText("No historical trend data available");
     }
+    yPos += 5;
+
+    // Footer
+    addText("Data Source", 12, true);
+    addText("AgriClime Sentinel - Climate Risk Dashboard", 9);
+    addText("https://github.com/clevernat/AgriClime-Sentinel", 9);
+    addText(`Report generated: ${new Date().toLocaleString()}`, 9);
 
     // Add metadata
     pdf.setProperties({

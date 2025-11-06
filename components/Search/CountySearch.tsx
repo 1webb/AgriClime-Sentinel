@@ -251,10 +251,10 @@ export default function CountySearch({ onCountySelect }: CountySearchProps) {
                 Search Results
               </div>
               {searchResults.map((county) => (
-                <button
+                <div
                   key={county.fips}
+                  className="w-full px-3 py-2.5 hover:bg-blue-50 flex items-center justify-between group transition-colors cursor-pointer"
                   onClick={() => handleSelectCounty(county)}
-                  className="w-full px-3 py-2.5 hover:bg-blue-50 flex items-center justify-between group transition-colors"
                 >
                   <div className="flex items-center gap-2">
                     <MapPin size={16} className="text-gray-400" />
@@ -270,6 +270,11 @@ export default function CountySearch({ onCountySelect }: CountySearchProps) {
                   <button
                     onClick={(e) => toggleFavorite(county, e)}
                     className="opacity-0 group-hover:opacity-100 transition-opacity"
+                    aria-label={
+                      favorites.some((f) => f.fips === county.fips)
+                        ? "Remove from favorites"
+                        : "Add to favorites"
+                    }
                   >
                     <Star
                       size={16}
@@ -280,7 +285,7 @@ export default function CountySearch({ onCountySelect }: CountySearchProps) {
                       }
                     />
                   </button>
-                </button>
+                </div>
               ))}
             </div>
           )}
@@ -302,10 +307,10 @@ export default function CountySearch({ onCountySelect }: CountySearchProps) {
                 Favorites
               </div>
               {favorites.map((county) => (
-                <button
+                <div
                   key={county.fips}
+                  className="w-full px-3 py-2.5 hover:bg-blue-50 flex items-center justify-between group transition-colors cursor-pointer"
                   onClick={() => handleSelectCounty(county)}
-                  className="w-full px-3 py-2.5 hover:bg-blue-50 flex items-center justify-between group transition-colors"
                 >
                   <div className="flex items-center gap-2">
                     <MapPin size={16} className="text-gray-400" />
@@ -321,13 +326,14 @@ export default function CountySearch({ onCountySelect }: CountySearchProps) {
                   <button
                     onClick={(e) => toggleFavorite(county, e)}
                     className="opacity-0 group-hover:opacity-100 transition-opacity"
+                    aria-label="Remove from favorites"
                   >
                     <Star
                       size={16}
                       className="fill-yellow-400 text-yellow-400"
                     />
                   </button>
-                </button>
+                </div>
               ))}
             </div>
           )}
