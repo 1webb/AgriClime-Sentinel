@@ -24,6 +24,7 @@ import {
 import type { WeatherAlert } from "@/lib/api/noaa-weather";
 import type { SevereWeatherIndices } from "@/lib/api/severe-weather-indices";
 import AtmosphericExportButtons from "@/components/Export/AtmosphericExportButtons";
+import ChartExportButton from "@/components/Export/ChartExportButton";
 
 interface AirQualityObservation {
   dateObserved: string;
@@ -507,95 +508,105 @@ export default function AtmosphericScienceDashboard({
 
                   {/* Atmospheric Indices Chart */}
                   <div className="bg-white border border-gray-200 rounded-lg sm:rounded-xl p-4 sm:p-6 shadow-sm">
-                    <h4 className="text-base sm:text-lg md:text-xl font-bold text-gray-800 mb-3 sm:mb-4">
-                      Atmospheric Instability Indices
-                    </h4>
-                    <ResponsiveContainer
-                      width="100%"
-                      height={250}
-                      className="sm:!h-[300px] md:!h-[350px]"
-                    >
-                      <BarChart
-                        data={[
-                          {
-                            name: "CAPE",
-                            value: severeWeatherIndices.cape / 10,
-                            unit: "J/kg (÷10)",
-                            color: "#EF4444",
-                          },
-                          {
-                            name: "K-Index",
-                            value: severeWeatherIndices.kIndex,
-                            unit: "",
-                            color: "#F59E0B",
-                          },
-                          {
-                            name: "Total Totals",
-                            value: severeWeatherIndices.totalTotals,
-                            unit: "",
-                            color: "#10B981",
-                          },
-                          {
-                            name: "0-6km Shear",
-                            value: severeWeatherIndices.bulkShear0to6km,
-                            unit: "m/s",
-                            color: "#3B82F6",
-                          },
-                          {
-                            name: "0-3km SRH",
-                            value:
-                              severeWeatherIndices.stormRelativeHelicity0to3km /
-                              10,
-                            unit: "m²/s² (÷10)",
-                            color: "#8B5CF6",
-                          },
-                        ]}
+                    <div className="flex items-center justify-between mb-3 sm:mb-4">
+                      <h4 className="text-base sm:text-lg md:text-xl font-bold text-gray-800">
+                        Atmospheric Instability Indices
+                      </h4>
+                      <ChartExportButton
+                        chartId="atmospheric-indices-chart"
+                        chartName="Atmospheric-Instability-Indices"
+                        countyName={countyName}
+                        state={state}
+                      />
+                    </div>
+                    <div id="atmospheric-indices-chart">
+                      <ResponsiveContainer
+                        width="100%"
+                        height={250}
+                        className="sm:!h-[300px] md:!h-[350px]"
                       >
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis
-                          dataKey="name"
-                          tick={{ fontSize: 10 }}
-                          className="sm:text-xs md:text-sm"
-                        />
-                        <YAxis
-                          tick={{ fontSize: 10 }}
-                          className="sm:text-xs md:text-sm"
-                        />
-                        <Tooltip
-                          content={({ active, payload }) => {
-                            if (active && payload && payload.length) {
-                              return (
-                                <div className="bg-white border border-gray-300 rounded-lg p-2 sm:p-3 shadow-lg">
-                                  <p className="font-semibold text-gray-800 text-xs sm:text-sm">
-                                    {payload[0].payload.name}
-                                  </p>
-                                  <p className="text-gray-600 text-xs sm:text-sm">
-                                    Value: {payload[0].value?.toFixed(1)}{" "}
-                                    {payload[0].payload.unit}
-                                  </p>
-                                </div>
-                              );
-                            }
-                            return null;
-                          }}
-                        />
-                        <Bar
-                          dataKey="value"
-                          fill="#3B82F6"
-                          radius={[8, 8, 0, 0]}
+                        <BarChart
+                          data={[
+                            {
+                              name: "CAPE",
+                              value: severeWeatherIndices.cape / 10,
+                              unit: "J/kg (÷10)",
+                              color: "#EF4444",
+                            },
+                            {
+                              name: "K-Index",
+                              value: severeWeatherIndices.kIndex,
+                              unit: "",
+                              color: "#F59E0B",
+                            },
+                            {
+                              name: "Total Totals",
+                              value: severeWeatherIndices.totalTotals,
+                              unit: "",
+                              color: "#10B981",
+                            },
+                            {
+                              name: "0-6km Shear",
+                              value: severeWeatherIndices.bulkShear0to6km,
+                              unit: "m/s",
+                              color: "#3B82F6",
+                            },
+                            {
+                              name: "0-3km SRH",
+                              value:
+                                severeWeatherIndices.stormRelativeHelicity0to3km /
+                                10,
+                              unit: "m²/s² (÷10)",
+                              color: "#8B5CF6",
+                            },
+                          ]}
                         >
-                          {[
-                            { name: "CAPE", color: "#EF4444" },
-                            { name: "K-Index", color: "#F59E0B" },
-                            { name: "Total Totals", color: "#10B981" },
-                            { name: "0-6km Shear", color: "#3B82F6" },
-                            { name: "0-3km SRH", color: "#8B5CF6" },
-                          ].map((entry, index) => (
-                            <Bar key={`bar-${index}`} fill={entry.color} />
-                          ))}
-                        </Bar>
-                      </BarChart>
-                    </ResponsiveContainer>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis
+                            dataKey="name"
+                            tick={{ fontSize: 10 }}
+                            className="sm:text-xs md:text-sm"
+                          />
+                          <YAxis
+                            tick={{ fontSize: 10 }}
+                            className="sm:text-xs md:text-sm"
+                          />
+                          <Tooltip
+                            content={({ active, payload }) => {
+                              if (active && payload && payload.length) {
+                                return (
+                                  <div className="bg-white border border-gray-300 rounded-lg p-2 sm:p-3 shadow-lg">
+                                    <p className="font-semibold text-gray-800 text-xs sm:text-sm">
+                                      {payload[0].payload.name}
+                                    </p>
+                                    <p className="text-gray-600 text-xs sm:text-sm">
+                                      Value: {payload[0].value?.toFixed(1)}{" "}
+                                      {payload[0].payload.unit}
+                                    </p>
+                                  </div>
+                                );
+                              }
+                              return null;
+                            }}
+                          />
+                          <Bar
+                            dataKey="value"
+                            fill="#3B82F6"
+                            radius={[8, 8, 0, 0]}
+                          >
+                            {[
+                              { name: "CAPE", color: "#EF4444" },
+                              { name: "K-Index", color: "#F59E0B" },
+                              { name: "Total Totals", color: "#10B981" },
+                              { name: "0-6km Shear", color: "#3B82F6" },
+                              { name: "0-3km SRH", color: "#8B5CF6" },
+                            ].map((entry, index) => (
+                              <Bar key={`bar-${index}`} fill={entry.color} />
+                            ))}
+                          </Bar>
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
                   </div>
 
                   {/* Detailed Indices Grid */}
@@ -894,71 +905,83 @@ export default function AtmosphericScienceDashboard({
 
                         {/* Pollutants Bar Chart */}
                         <div className="bg-white border border-gray-200 rounded-lg sm:rounded-xl p-4 sm:p-6 shadow-sm">
-                          <h4 className="text-base sm:text-lg md:text-xl font-bold text-gray-800 mb-3 sm:mb-4">
-                            Pollutant Comparison
-                          </h4>
-                          <ResponsiveContainer
-                            width="100%"
-                            height={250}
-                            className="sm:!h-[300px] md:!h-[350px]"
-                          >
-                            <BarChart data={airQuality.observations}>
-                              <CartesianGrid strokeDasharray="3 3" />
-                              <XAxis
-                                dataKey="parameterName"
-                                tick={{ fontSize: 10 }}
-                                className="sm:text-xs md:text-sm"
-                              />
-                              <YAxis
-                                label={{
-                                  value: "AQI",
-                                  angle: -90,
-                                  position: "insideLeft",
-                                  style: { fontSize: 12 },
-                                }}
-                                tick={{ fontSize: 10 }}
-                                className="sm:text-xs md:text-sm"
-                              />
-                              <Tooltip
-                                content={({ active, payload }) => {
-                                  if (active && payload && payload.length) {
-                                    return (
-                                      <div className="bg-white border-2 border-gray-300 rounded-lg p-2 sm:p-3 shadow-xl">
-                                        <p className="font-semibold text-gray-800 text-xs sm:text-sm">
-                                          {payload[0].payload.parameterName}
-                                        </p>
-                                        <p className="text-gray-600 text-xs sm:text-sm">
-                                          AQI: {payload[0].value}
-                                        </p>
-                                        <p
-                                          className="text-xs sm:text-sm font-semibold mt-1"
-                                          style={{
-                                            color:
-                                              payload[0].payload.category
-                                                ?.color || "#666",
-                                          }}
-                                        >
-                                          {payload[0].payload.category?.name ||
-                                            "Unknown"}
-                                        </p>
-                                      </div>
-                                    );
-                                  }
-                                  return null;
-                                }}
-                              />
-                              <Bar dataKey="aqi" radius={[8, 8, 0, 0]}>
-                                {airQuality.observations.map(
-                                  (entry, index: number) => (
-                                    <Bar
-                                      key={`bar-${index}`}
-                                      fill={entry.category?.color || "#3B82F6"}
-                                    />
-                                  )
-                                )}
-                              </Bar>
-                            </BarChart>
-                          </ResponsiveContainer>
+                          <div className="flex items-center justify-between mb-3 sm:mb-4">
+                            <h4 className="text-base sm:text-lg md:text-xl font-bold text-gray-800">
+                              Pollutant Comparison
+                            </h4>
+                            <ChartExportButton
+                              chartId="pollutant-comparison-chart"
+                              chartName="Pollutant-Comparison"
+                              countyName={countyName}
+                              state={state}
+                            />
+                          </div>
+                          <div id="pollutant-comparison-chart">
+                            <ResponsiveContainer
+                              width="100%"
+                              height={250}
+                              className="sm:!h-[300px] md:!h-[350px]"
+                            >
+                              <BarChart data={airQuality.observations}>
+                                <CartesianGrid strokeDasharray="3 3" />
+                                <XAxis
+                                  dataKey="parameterName"
+                                  tick={{ fontSize: 10 }}
+                                  className="sm:text-xs md:text-sm"
+                                />
+                                <YAxis
+                                  label={{
+                                    value: "AQI",
+                                    angle: -90,
+                                    position: "insideLeft",
+                                    style: { fontSize: 12 },
+                                  }}
+                                  tick={{ fontSize: 10 }}
+                                  className="sm:text-xs md:text-sm"
+                                />
+                                <Tooltip
+                                  content={({ active, payload }) => {
+                                    if (active && payload && payload.length) {
+                                      return (
+                                        <div className="bg-white border-2 border-gray-300 rounded-lg p-2 sm:p-3 shadow-xl">
+                                          <p className="font-semibold text-gray-800 text-xs sm:text-sm">
+                                            {payload[0].payload.parameterName}
+                                          </p>
+                                          <p className="text-gray-600 text-xs sm:text-sm">
+                                            AQI: {payload[0].value}
+                                          </p>
+                                          <p
+                                            className="text-xs sm:text-sm font-semibold mt-1"
+                                            style={{
+                                              color:
+                                                payload[0].payload.category
+                                                  ?.color || "#666",
+                                            }}
+                                          >
+                                            {payload[0].payload.category
+                                              ?.name || "Unknown"}
+                                          </p>
+                                        </div>
+                                      );
+                                    }
+                                    return null;
+                                  }}
+                                />
+                                <Bar dataKey="aqi" radius={[8, 8, 0, 0]}>
+                                  {airQuality.observations.map(
+                                    (entry, index: number) => (
+                                      <Bar
+                                        key={`bar-${index}`}
+                                        fill={
+                                          entry.category?.color || "#3B82F6"
+                                        }
+                                      />
+                                    )
+                                  )}
+                                </Bar>
+                              </BarChart>
+                            </ResponsiveContainer>
+                          </div>
                         </div>
                       </>
                     )}
@@ -1092,69 +1115,79 @@ export default function AtmosphericScienceDashboard({
                   {/* Trend Chart */}
                   {climateTrends.data && climateTrends.data.length > 0 && (
                     <div className="bg-white border border-gray-200 rounded-lg sm:rounded-xl p-4 sm:p-6 shadow-sm">
-                      <h4 className="text-base sm:text-lg md:text-xl font-bold text-gray-800 mb-3 sm:mb-4">
-                        Temperature Trend ({climateTrends.period.startYear} -{" "}
-                        {climateTrends.period.endYear})
-                      </h4>
-                      <ResponsiveContainer
-                        width="100%"
-                        height={300}
-                        className="sm:!h-[350px] md:!h-[400px]"
-                      >
-                        <LineChart data={climateTrends.data}>
-                          <CartesianGrid
-                            strokeDasharray="3 3"
-                            stroke="#E5E7EB"
-                          />
-                          <XAxis
-                            dataKey="year"
-                            tick={{ fontSize: 10 }}
-                            tickFormatter={(value) => value.toString()}
-                            className="sm:text-xs md:text-sm"
-                          />
-                          <YAxis
-                            label={{
-                              value: "Temperature (°C)",
-                              angle: -90,
-                              position: "insideLeft",
-                              style: { fontSize: 11, fontWeight: 600 },
-                            }}
-                            tick={{ fontSize: 10 }}
-                            className="sm:text-xs md:text-sm"
-                          />
-                          <Tooltip
-                            contentStyle={{
-                              backgroundColor: "white",
-                              border: "2px solid #3B82F6",
-                              borderRadius: "8px",
-                              padding: "8px",
-                              fontSize: "12px",
-                            }}
-                            labelStyle={{
-                              fontWeight: "bold",
-                              color: "#1F2937",
-                              fontSize: "12px",
-                            }}
-                          />
-                          <Legend
-                            wrapperStyle={{
-                              paddingTop: "12px",
-                              fontSize: "11px",
-                            }}
-                            iconType="line"
-                          />
-                          <Line
-                            type="monotone"
-                            dataKey="value"
-                            stroke="#3B82F6"
-                            name="Annual Average Temperature"
-                            strokeWidth={2}
-                            dot={{ fill: "#3B82F6", r: 1.5 }}
-                            activeDot={{ r: 5 }}
-                            className="sm:!stroke-[2.5] md:!stroke-[3]"
-                          />
-                        </LineChart>
-                      </ResponsiveContainer>
+                      <div className="flex items-center justify-between mb-3 sm:mb-4">
+                        <h4 className="text-base sm:text-lg md:text-xl font-bold text-gray-800">
+                          Temperature Trend ({climateTrends.period.startYear} -{" "}
+                          {climateTrends.period.endYear})
+                        </h4>
+                        <ChartExportButton
+                          chartId="temperature-trend-chart"
+                          chartName="Temperature-Trend"
+                          countyName={countyName}
+                          state={state}
+                        />
+                      </div>
+                      <div id="temperature-trend-chart">
+                        <ResponsiveContainer
+                          width="100%"
+                          height={300}
+                          className="sm:!h-[350px] md:!h-[400px]"
+                        >
+                          <LineChart data={climateTrends.data}>
+                            <CartesianGrid
+                              strokeDasharray="3 3"
+                              stroke="#E5E7EB"
+                            />
+                            <XAxis
+                              dataKey="year"
+                              tick={{ fontSize: 10 }}
+                              tickFormatter={(value) => value.toString()}
+                              className="sm:text-xs md:text-sm"
+                            />
+                            <YAxis
+                              label={{
+                                value: "Temperature (°C)",
+                                angle: -90,
+                                position: "insideLeft",
+                                style: { fontSize: 11, fontWeight: 600 },
+                              }}
+                              tick={{ fontSize: 10 }}
+                              className="sm:text-xs md:text-sm"
+                            />
+                            <Tooltip
+                              contentStyle={{
+                                backgroundColor: "white",
+                                border: "2px solid #3B82F6",
+                                borderRadius: "8px",
+                                padding: "8px",
+                                fontSize: "12px",
+                              }}
+                              labelStyle={{
+                                fontWeight: "bold",
+                                color: "#1F2937",
+                                fontSize: "12px",
+                              }}
+                            />
+                            <Legend
+                              wrapperStyle={{
+                                paddingTop: "12px",
+                                fontSize: "11px",
+                              }}
+                              iconType="line"
+                            />
+                            <Line
+                              type="monotone"
+                              dataKey="value"
+                              stroke="#3B82F6"
+                              name="Annual Average Temperature"
+                              strokeWidth={2}
+                              dot={{ fill: "#3B82F6", r: 1.5 }}
+                              activeDot={{ r: 5 }}
+                              className="sm:!stroke-[2.5] md:!stroke-[3]"
+                            />
+                          </LineChart>
+                        </ResponsiveContainer>
+                      </div>
                     </div>
                   )}
                 </>
