@@ -63,9 +63,15 @@ export async function GET(request: NextRequest) {
       // but our interface uses lowercase. We need to handle both.
       const enrichedObservations = observations.map((obs) => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const aqiValue = (obs as any).AQI || obs.aqi || 0;
+        const rawObs = obs as any;
+        const aqiValue = rawObs.AQI || obs.aqi || 0;
+        const parameterName =
+          rawObs.ParameterName || obs.parameterName || "Unknown";
+
         return {
           ...obs,
+          aqi: aqiValue,
+          parameterName: parameterName,
           category: getAQICategory(aqiValue),
         };
       });
@@ -126,9 +132,15 @@ export async function GET(request: NextRequest) {
         // but our interface uses lowercase. We need to handle both.
         const enrichedObservations = observations.map((obs) => {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const aqiValue = (obs as any).AQI || obs.aqi || 0;
+          const rawObs = obs as any;
+          const aqiValue = rawObs.AQI || obs.aqi || 0;
+          const parameterName =
+            rawObs.ParameterName || obs.parameterName || "Unknown";
+
           return {
             ...obs,
+            aqi: aqiValue,
+            parameterName: parameterName,
             category: getAQICategory(aqiValue),
           };
         });
