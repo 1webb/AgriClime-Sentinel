@@ -151,10 +151,18 @@ body {
     margin-bottom: 70px !important; /* Space for floating button */
     margin-right: 4px !important;
     z-index: 1 !important; /* Below sidebar (z-999) and backdrop (z-998) */
+    opacity: 1;
+    transition: opacity 0.3s ease-in-out;
   }
 
-  /* Hide zoom controls when mobile sidebar is open */
+  /* Hide zoom controls AND attribution when mobile sidebar is open */
   .hide-mobile-zoom .leaflet-control-zoom {
+    opacity: 0 !important;
+    pointer-events: none !important;
+    transition: opacity 0.3s ease-in-out;
+  }
+
+  .hide-mobile-zoom .leaflet-control-attribution {
     opacity: 0 !important;
     pointer-events: none !important;
     transition: opacity 0.3s ease-in-out;
