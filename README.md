@@ -187,6 +187,24 @@ The index is calibrated for five major U.S. crops, each with unique growth stage
 
 ## 🎨 Recent Improvements (November 2025)
 
+### Mobile Responsiveness Overhaul 📱
+
+- **Mobile Sidebar Toggle**: Implemented slide-in drawer navigation for mobile devices
+  - **Floating Controls Button**: Blue circular button with Menu icon + "Controls" text
+  - **Smooth Slide-In Animation**: 300ms transition from left edge
+  - **Dark Backdrop**: Semi-transparent overlay with tap-to-close functionality
+  - **Full Feature Access**: All controls accessible on mobile (search, layers, legend, info)
+  - **Desktop Unchanged**: Sidebar always visible on larger screens
+  - **Professional UX**: Modern mobile app experience with intuitive gestures
+
+- **Mobile Layout Improvements**: Enhanced visibility of all features on small screens
+  - Removed height restrictions on sidebar (was limited to 40vh)
+  - Made "About This Tool" section visible on all screen sizes
+  - Made "Data Sources" section visible on all screen sizes
+  - Improved Export button visibility with always-visible text
+  - Touch-friendly button sizes (44x44px minimum)
+  - Responsive font sizes and spacing
+
 ### Data Architecture Overhaul
 
 - **Two-Tier Hybrid System**: Implemented sophisticated data architecture
@@ -283,6 +301,51 @@ The index is calibrated for five major U.S. crops, each with unique growth stage
 
 ## 📊 Features & User Stories
 
+### Mobile-First Design 📱
+
+**Objective**: Provide full functionality on mobile devices with intuitive touch-based navigation
+
+**Implementation**:
+
+- **Slide-In Sidebar Navigation**:
+  - Floating "Controls" button in top-left corner
+  - Tap to reveal full sidebar with all map controls
+  - Smooth 300ms slide-in animation from left
+  - Dark backdrop overlay for focus
+  - Two ways to close: X button or tap backdrop
+
+- **Full Feature Parity**:
+  - ✅ County search with autocomplete
+  - ✅ Data layer selection (5 layers)
+  - ✅ Crop type selection
+  - ✅ Interactive map legend
+  - ✅ About section and data sources
+  - ✅ Export functionality (PDF/CSV)
+
+- **Touch-Optimized Interface**:
+  - Minimum 44x44px touch targets
+  - Responsive font sizes (14px base on mobile)
+  - Optimized spacing and padding
+  - Full-screen map view when sidebar closed
+  - Smooth transitions and animations
+
+**Mobile User Flow**:
+```
+1. User opens app on phone
+   ↓
+2. Map fills full screen
+   ↓
+3. Tap floating "Controls" button
+   ↓
+4. Sidebar slides in with all controls
+   ↓
+5. Search counties, change layers, view legend
+   ↓
+6. Tap X or backdrop to close
+   ↓
+7. Sidebar slides out, back to full map
+```
+
 ### User Story 1: National Risk Map (Spatial Visualization)
 
 **Objective**: Provide an at-a-glance view of climate risks across the entire United States
@@ -371,9 +434,10 @@ The index is calibrated for five major U.S. crops, each with unique growth stage
 
 - **Next.js 16** (React 19): Server-side rendering, API routes
 - **TypeScript**: Type-safe development
-- **Tailwind CSS**: Responsive, modern UI
-- **Leaflet.js**: Interactive mapping
+- **Tailwind CSS**: Responsive, mobile-first UI with custom breakpoints
+- **Leaflet.js**: Interactive mapping with touch support
 - **Recharts**: Data visualization
+- **Lucide React**: Modern icon library for UI elements
 
 **Backend**:
 
@@ -647,11 +711,13 @@ The platform uses a sophisticated PostgreSQL schema optimized for geospatial and
    - Calculate ROI for adaptation measures
    - Link to commodity price data
 
-4. **Mobile Application**
+4. **Enhanced Mobile Features**
 
-   - Native iOS/Android apps
-   - Offline access to key data
-   - GPS-based location services
+   - Progressive Web App (PWA) support
+   - Offline access to cached map data
+   - GPS-based location services for automatic county detection
+   - Push notifications for weather alerts
+   - Native iOS/Android apps with React Native
 
 5. **International Expansion**
    - Extend to global agricultural regions
