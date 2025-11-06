@@ -97,7 +97,11 @@ export default function Home() {
   return (
     <div className="flex flex-col h-screen">
       {/* Header */}
-      <header className="bg-gradient-to-r from-green-700 to-blue-700 text-white p-3 sm:p-4 md:p-6 shadow-lg overflow-visible">
+      <header
+        className={`bg-gradient-to-r from-green-700 to-blue-700 text-white p-3 sm:p-4 md:p-6 shadow-lg overflow-visible transition-all duration-300 ${
+          isMobileSidebarOpen ? 'md:blur-0 blur-sm brightness-50' : ''
+        }`}
+      >
         <div className="container mx-auto">
           <div className="flex flex-col lg:flex-row justify-between items-center gap-3 sm:gap-4 lg:gap-6">
             <div className="text-center lg:text-left flex-shrink-0">
@@ -310,7 +314,11 @@ export default function Home() {
         )}
 
       {/* Footer */}
-      <footer className="bg-gradient-to-r from-green-700 to-blue-700 text-white border-t border-green-600">
+      <footer
+        className={`bg-gradient-to-r from-green-700 to-blue-700 text-white border-t border-green-600 transition-all duration-300 ${
+          isMobileSidebarOpen ? 'md:blur-0 blur-sm brightness-50' : ''
+        }`}
+      >
         <div className="container mx-auto px-3 sm:px-4 md:px-6 py-3 sm:py-4">
           {/* Mobile Layout: Single Column */}
           <div className="flex flex-col gap-2 sm:gap-3 md:hidden">
