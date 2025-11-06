@@ -72,10 +72,12 @@ interface ClimateTrendsData {
   period: { startYear: number; endYear: number; yearsAnalyzed: number };
   trend: {
     slope: number;
-    direction: string;
-    significance: string;
+    trendDirection: "Increasing" | "Decreasing" | "No Trend";
+    isSignificant: boolean;
     pValue: number;
     rSquared: number;
+    percentChange: number;
+    interpretation: string;
   };
   data: Array<{ year: number; value: number }>;
   movingAverage: Array<{ year: number; value: number }>;
@@ -947,21 +949,23 @@ export default function AtmosphericScienceDashboard({
                         </p>
                         <p
                           className={`text-4xl font-bold ${
-                            climateTrends.trend.direction === "Increasing"
+                            climateTrends.trend.trendDirection === "Increasing"
                               ? "text-red-600"
-                              : climateTrends.trend.direction === "Decreasing"
+                              : climateTrends.trend.trendDirection ===
+                                "Decreasing"
                               ? "text-blue-600"
                               : "text-gray-600"
                           }`}
                         >
-                          {climateTrends.trend.direction === "Increasing"
+                          {climateTrends.trend.trendDirection === "Increasing"
                             ? "↑"
-                            : climateTrends.trend.direction === "Decreasing"
+                            : climateTrends.trend.trendDirection ===
+                              "Decreasing"
                             ? "↓"
                             : "→"}
                         </p>
                         <p className="text-sm text-gray-700 mt-1 font-medium">
-                          {climateTrends.trend.direction}
+                          {climateTrends.trend.trendDirection}
                         </p>
                       </div>
                       <div className="text-center p-5 bg-white rounded-xl shadow-sm border border-gray-100">
@@ -981,12 +985,8 @@ export default function AtmosphericScienceDashboard({
                           Total Change
                         </p>
                         <p className="text-4xl font-bold text-orange-600">
-                          {climateTrends.trend.slope > 0 ? "+" : ""}
-                          {(
-                            climateTrends.trend.slope *
-                            climateTrends.period.yearsAnalyzed
-                          ).toFixed(2)}
-                          °C
+                          {climateTrends.trend.percentChange > 0 ? "+" : ""}
+                          {climateTrends.trend.percentChange.toFixed(2)}%
                         </p>
                         <p className="text-xs text-gray-500 mt-1">
                           {climateTrends.period.startYear} -{" "}
@@ -999,17 +999,17 @@ export default function AtmosphericScienceDashboard({
                         </p>
                         <p
                           className={`text-4xl font-bold ${
-                            climateTrends.trend.significance === "Significant"
+                            climateTrends.trend.isSignificant
                               ? "text-green-600"
                               : "text-gray-600"
                           }`}
                         >
-                          {climateTrends.trend.significance === "Significant"
-                            ? "✓"
-                            : "✗"}
+                          {climateTrends.trend.isSignificant ? "✓" : "✗"}
                         </p>
                         <p className="text-xs text-gray-500 mt-1">
-                          {climateTrends.trend.significance}
+                          {climateTrends.trend.isSignificant
+                            ? "Significant"
+                            : "Not Significant"}
                         </p>
                         <p className="text-xs text-gray-500">
                           p = {climateTrends.trend.pValue.toFixed(4)}
@@ -1023,14 +1023,7 @@ export default function AtmosphericScienceDashboard({
                           📊 Interpretation:
                         </strong>
                         <br />
-                        The temperature trend shows a{" "}
-                        {climateTrends.trend.direction.toLowerCase()} pattern
-                        with a rate of{" "}
-                        {Math.abs(climateTrends.trend.slope).toFixed(3)}°C per
-                        year. This trend is{" "}
-                        {climateTrends.trend.significance.toLowerCase()}
-                        (p = {climateTrends.trend.pValue.toFixed(4)}) with an R²
-                        of {climateTrends.trend.rSquared.toFixed(3)}.
+                        {climateTrends.trend.interpretation}
                       </p>
                     </div>
                   </div>
