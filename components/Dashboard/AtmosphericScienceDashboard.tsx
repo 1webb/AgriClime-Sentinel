@@ -104,6 +104,7 @@ export default function AtmosphericScienceDashboard({
   onClose,
 }: AtmosphericScienceDashboardProps) {
   const [loading, setLoading] = useState(true);
+  const [loadingProgress, setLoadingProgress] = useState<string>("Initializing...");
   const [activeTab, setActiveTab] = useState<
     "alerts" | "severe" | "airquality" | "trends"
   >("alerts");
@@ -120,12 +121,37 @@ export default function AtmosphericScienceDashboard({
   );
 
   /**
+   * Helper function to fetch with timeout
+   */
+  const fetchWithTimeout = async (url: string, timeout = 10000) => {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+    try {
+      const response = await fetch(url, { signal: controller.signal });
+      clearTimeout(timeoutId);
+      return response;
+    } catch (error) {
+      clearTimeout(timeoutId);
+      if (error instanceof Error && error.name === 'AbortError') {
+        console.warn(`Request timeout for ${url}`);
+        return new Response(JSON.stringify({ success: false, error: 'timeout' }), {
+          status: 408,
+          headers: { 'Content-Type': 'application/json' }
+        });
+      }
+      throw error;
+    }
+  };
+
+  /**
    * Fetches atmospheric data from multiple APIs in parallel for optimal performance.
    *
    * Performance Optimization:
    * - Uses Promise.all() to fetch all 4 APIs simultaneously instead of sequentially
    * - Reduces total loading time by ~75% (from sum of all API times to max of single API time)
    * - Typical improvement: 8-12 seconds → 2-3 seconds
+   * - Added 10-second timeout per API to prevent hanging
    *
    * APIs fetched:
    * 1. Weather Alerts (NOAA)
@@ -135,22 +161,28 @@ export default function AtmosphericScienceDashboard({
    */
   const fetchAtmosphericData = useCallback(async () => {
     setLoading(true);
+    setLoadingProgress("Fetching weather alerts...");
 
     try {
-      // Fetch all data in parallel for faster loading
-      const [alertsRes, severeRes, aqRes, trendsRes] = await Promise.all([
-        fetch(`/api/weather-alerts?lat=${latitude}&lon=${longitude}`),
-        fetch(`/api/severe-weather?lat=${latitude}&lon=${longitude}`),
-        fetch(`/api/air-quality?lat=${latitude}&lon=${longitude}`),
-        fetch(`/api/climate-trends?fips=${fips}&type=temperature`),
-      ]);
+      // Fetch all data in parallel with timeout protection
+      const fetchPromises = [
+        fetchWithTimeout(`/api/weather-alerts?lat=${latitude}&lon=${longitude}`, 10000),
+        fetchWithTimeout(`/api/severe-weather?lat=${latitude}&lon=${longitude}`, 10000),
+        fetchWithTimeout(`/api/air-quality?lat=${latitude}&lon=${longitude}`, 10000),
+        fetchWithTimeout(`/api/climate-trends?fips=${fips}&type=temperature`, 15000), // Climate trends may take longer
+      ];
+
+      setLoadingProgress("Loading data from 4 sources...");
+      const [alertsRes, severeRes, aqRes, trendsRes] = await Promise.all(fetchPromises);
+
+      setLoadingProgress("Processing responses...");
 
       // Parse all responses in parallel
       const [alertsData, severeData, aqData, trendsData] = await Promise.all([
-        alertsRes.json(),
-        severeRes.json(),
-        aqRes.json(),
-        trendsRes.json(),
+        alertsRes.json().catch(() => ({ success: false })),
+        severeRes.json().catch(() => ({ success: false })),
+        aqRes.json().catch(() => ({ success: false })),
+        trendsRes.json().catch(() => ({ success: false })),
       ]);
 
       // Process weather alerts
@@ -229,10 +261,16 @@ export default function AtmosphericScienceDashboard({
   if (loading) {
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] animate-fadeIn p-4">
-        <div className="bg-white p-6 sm:p-8 rounded-xl sm:rounded-2xl shadow-2xl flex flex-col items-center space-y-3 sm:space-y-4 animate-scaleIn">
+        <div className="bg-white p-6 sm:p-8 rounded-xl sm:rounded-2xl shadow-2xl flex flex-col items-center space-y-3 sm:space-y-4 animate-scaleIn max-w-md">
           <div className="w-12 h-12 sm:w-16 sm:h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
           <div className="text-gray-800 text-base sm:text-xl font-semibold text-center">
             Loading atmospheric data...
+          </div>
+          <div className="text-gray-600 text-xs sm:text-sm text-center">
+            {loadingProgress}
+          </div>
+          <div className="text-gray-400 text-xs text-center mt-2">
+            Fetching from NOAA, EPA, and Open-Meteo
           </div>
         </div>
       </div>

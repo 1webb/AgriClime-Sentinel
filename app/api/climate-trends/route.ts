@@ -132,9 +132,9 @@ async function fetchHistoricalClimateData(
       const url = `https://archive-api.open-meteo.com/v1/archive?${params}`;
 
       try {
-        // Add timeout to prevent hanging
+        // Add timeout to prevent hanging - reduced to 5 seconds per chunk
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
 
         const response = await fetch(url, {
           headers: {
@@ -238,9 +238,12 @@ export async function GET(request: NextRequest) {
     const type = searchParams.get("type");
     const latParam = searchParams.get("lat");
     const lonParam = searchParams.get("lon");
-    const startYear = parseInt(searchParams.get("startYear") || "1970");
+    // Reduced default range from 1970 to 2000 for faster loading (30 years vs 54 years)
+    // This still provides statistically significant climate trend analysis
+    const currentYear = new Date().getFullYear();
+    const startYear = parseInt(searchParams.get("startYear") || "2000");
     const endYear = parseInt(
-      searchParams.get("endYear") || new Date().getFullYear().toString()
+      searchParams.get("endYear") || currentYear.toString()
     );
 
     if (!fips) {
@@ -287,19 +290,35 @@ export async function GET(request: NextRequest) {
       `Fetching climate trends for FIPS ${fips} at (${latitude}, ${longitude})`
     );
 
-    // Try to fetch historical climate data from Open-Meteo
-    // If it fails or times out, generate realistic climate trend data
-    let trendData = await fetchHistoricalClimateData(
-      latitude,
-      longitude,
-      startYear,
-      endYear,
-      type
-    );
-
+    // Try to fetch historical climate data from Open-Meteo with a race condition
+    // If it takes too long, use generated data for faster response
+    let trendData: ClimateTrendData[] = [];
     let dataSource = "Open-Meteo Historical Weather API";
 
-    // If Open-Meteo fails, generate realistic climate trend data
+    try {
+      // Race between API fetch and timeout
+      const fetchPromise = fetchHistoricalClimateData(
+        latitude,
+        longitude,
+        startYear,
+        endYear,
+        type
+      );
+
+      const timeoutPromise = new Promise<ClimateTrendData[]>((resolve) => {
+        setTimeout(() => {
+          console.log("Open-Meteo API timeout, using generated data");
+          resolve([]);
+        }, 8000); // 8 second overall timeout for the entire climate fetch
+      });
+
+      trendData = await Promise.race([fetchPromise, timeoutPromise]);
+    } catch (error) {
+      console.error("Error fetching Open-Meteo data:", error);
+      trendData = [];
+    }
+
+    // If Open-Meteo fails or times out, generate realistic climate trend data
     if (trendData.length === 0) {
       trendData = generateRealisticClimateTrends(
         latitude,
