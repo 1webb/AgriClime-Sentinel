@@ -445,7 +445,7 @@ export async function exportChartAsPNG(
 }
 
 /**
- * Helper function to capture chart as image
+ * Helper function to capture chart as image using html2canvas
  */
 async function captureChartAsImage(chartId: string): Promise<string | null> {
   try {
@@ -457,63 +457,20 @@ async function captureChartAsImage(chartId: string): Promise<string | null> {
       return null;
     }
 
-    const svgElement = element.querySelector("svg");
-    if (!svgElement) {
-      console.warn(`SVG element not found in: ${chartId}`);
-      return null;
-    }
+    console.log(`Found element for ${chartId}, using html2canvas...`);
 
-    console.log(`Found SVG for ${chartId}, capturing...`);
-
-    const svgRect = svgElement.getBoundingClientRect();
-
-    // Clone the SVG to avoid modifying the original
-    const clonedSvg = svgElement.cloneNode(true) as SVGElement;
-
-    // Set explicit dimensions
-    clonedSvg.setAttribute("width", svgRect.width.toString());
-    clonedSvg.setAttribute("height", svgRect.height.toString());
-
-    const svgData = new XMLSerializer().serializeToString(clonedSvg);
-
-    const canvas = document.createElement("canvas");
-    canvas.width = svgRect.width * 2;
-    canvas.height = svgRect.height * 2;
-    const ctx = canvas.getContext("2d");
-
-    if (!ctx) {
-      console.warn("Failed to get canvas context");
-      return null;
-    }
-
-    // Fill with white background
-    ctx.fillStyle = "#ffffff";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.scale(2, 2);
-
-    return new Promise((resolve) => {
-      const img = new Image();
-      const svgBlob = new Blob([svgData], {
-        type: "image/svg+xml;charset=utf-8",
-      });
-      const url = URL.createObjectURL(svgBlob);
-
-      img.onload = () => {
-        ctx.drawImage(img, 0, 0, svgRect.width, svgRect.height);
-        URL.revokeObjectURL(url);
-        const dataUrl = canvas.toDataURL("image/png");
-        console.log(`Successfully captured ${chartId}`);
-        resolve(dataUrl);
-      };
-
-      img.onerror = (error) => {
-        console.error(`Failed to load image for ${chartId}:`, error);
-        URL.revokeObjectURL(url);
-        resolve(null);
-      };
-
-      img.src = url;
+    // Use html2canvas to capture the entire chart container
+    const canvas = await html2canvas(element, {
+      backgroundColor: "#ffffff",
+      scale: 2, // Higher quality
+      logging: false,
+      useCORS: true,
+      allowTaint: true,
     });
+
+    const dataUrl = canvas.toDataURL("image/png");
+    console.log(`Successfully captured ${chartId} using html2canvas`);
+    return dataUrl;
   } catch (error) {
     console.error(`Error capturing chart ${chartId}:`, error);
     return null;
