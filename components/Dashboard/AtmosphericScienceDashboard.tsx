@@ -262,9 +262,9 @@ export default function AtmosphericScienceDashboard({
               state={state}
               data={{
                 alerts: weatherAlerts,
-                severeWeather: severeWeatherData,
-                airQuality: airQualityData,
-                climateTrends: climateTrendsData,
+                severeWeather: severeWeatherIndices,
+                airQuality: airQuality,
+                climateTrends: climateTrends,
               }}
               dashboardElementId="atmospheric-dashboard-content"
             />
