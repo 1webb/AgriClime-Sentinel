@@ -120,7 +120,7 @@ export default function Home() {
                   onClick={() => setDashboardType("atmospheric")}
                   className={`flex-1 px-4 sm:px-6 md:px-8 py-3 sm:py-4 rounded-lg sm:rounded-xl font-bold text-sm sm:text-base transition-all duration-200 ${
                     dashboardType === "atmospheric"
-                      ? "bg-blue-600 text-white shadow-xl transform scale-105"
+                      ? "bg-blue-600 text-white shadow-xl"
                       : "bg-white bg-opacity-50 text-blue-800 hover:bg-opacity-80 hover:shadow-lg"
                   }`}
                 >
@@ -133,7 +133,7 @@ export default function Home() {
                   onClick={() => setDashboardType("agricultural")}
                   className={`flex-1 px-4 sm:px-6 md:px-8 py-3 sm:py-4 rounded-lg sm:rounded-xl font-bold text-sm sm:text-base transition-all duration-200 ${
                     dashboardType === "agricultural"
-                      ? "bg-green-600 text-white shadow-xl transform scale-105"
+                      ? "bg-green-600 text-white shadow-xl"
                       : "bg-white bg-opacity-50 text-green-800 hover:bg-opacity-80 hover:shadow-lg"
                   }`}
                 >
