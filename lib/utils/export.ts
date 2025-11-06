@@ -265,6 +265,60 @@ export async function exportToPDF(
       );
     };
 
+    // Helper function to add chart image (same pattern as Atmospheric PDF)
+    const addChartImage = async (
+      chartId: string,
+      chartTitle: string,
+      maxWidth: number = contentWidth,
+      maxHeight: number = 100
+    ) => {
+      console.log(`\n[Agricultural PDF] ========================================`);
+      console.log(`[Agricultural PDF] Adding chart: ${chartTitle}`);
+      console.log(`[Agricultural PDF] Chart ID: ${chartId}`);
+
+      const imageData = await captureChartAsImage(chartId);
+
+      if (!imageData) {
+        console.error(`[Agricultural PDF] ❌ Chart image not available: ${chartTitle}`);
+        addText(
+          `⚠ Chart visualization unavailable: ${chartTitle}`,
+          10,
+          false,
+          [150, 150, 150]
+        );
+        return;
+      }
+
+      console.log(`[Agricultural PDF] Image data received, length: ${imageData.length}`);
+      checkPageBreak(maxHeight + 15);
+
+      // Add chart title
+      pdf.setFontSize(11);
+      pdf.setFont("helvetica", "bold");
+      pdf.setTextColor(60, 60, 60);
+      pdf.text(chartTitle, leftMargin, yPos);
+      yPos += 7;
+
+      // Add image
+      try {
+        console.log(`[Agricultural PDF] Adding image to PDF at position y=${yPos}...`);
+        pdf.addImage(imageData, "PNG", leftMargin, yPos, maxWidth, maxHeight);
+        console.log(`[Agricultural PDF] ✅ Successfully added chart: ${chartTitle}`);
+        yPos += maxHeight + 8;
+      } catch (error) {
+        console.error(
+          `[Agricultural PDF] ❌ Failed to add image to PDF: ${chartTitle}`,
+          error
+        );
+        addText(
+          `⚠ Failed to embed chart: ${chartTitle}`,
+          10,
+          false,
+          [150, 150, 150]
+        );
+      }
+    };
+
     // ==================== TITLE PAGE ====================
 
     // Decorative top bar
@@ -470,35 +524,12 @@ export async function exportToPDF(
       // ========== CHART 1: Historical Drought Trends ==========
       addSectionHeader("4.1 Drought Frequency and Severity (50-Year Analysis)", [168, 85, 247], 2);
 
-      checkPageBreak(120); // Ensure space for chart
-
-      const droughtChartElement = document.getElementById("historical-trends-chart");
-      if (droughtChartElement) {
-        try {
-          console.log("Capturing Historical Drought Trends chart...");
-          const canvas = await html2canvas(droughtChartElement, {
-            scale: 2,
-            backgroundColor: "#f9fafb",
-            logging: false,
-          });
-
-          const imgData = canvas.toDataURL("image/png");
-          const imgWidth = contentWidth;
-          const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-          pdf.addImage(imgData, "PNG", leftMargin, yPos, imgWidth, imgHeight);
-          yPos += imgHeight + 8;
-
-          console.log("✅ Historical Drought Trends chart captured");
-        } catch (error) {
-          console.error("Error capturing drought chart:", error);
-          addText("⚠ Chart visualization unavailable", 10, false, [150, 150, 150]);
-          yPos += 5;
-        }
-      } else {
-        addText("⚠ Drought trends chart not found", 10, false, [150, 150, 150]);
-        yPos += 5;
-      }
+      await addChartImage(
+        "historical-trends-chart",
+        "Figure 1: Historical Drought Trends",
+        contentWidth,
+        100
+      );
 
       addText(
         "The chart above shows the historical pattern of drought events and their average severity. " +
@@ -509,39 +540,14 @@ export async function exportToPDF(
       yPos += 5;
 
       // ========== CHART 2: Extreme Heat Days ==========
-      checkPageBreak(120); // Ensure space for chart
-
       addSectionHeader("4.2 Extreme Heat Days by Year", [168, 85, 247], 2);
 
-      // Capture the extreme heat chart using its ID
-      const heatChartElement = document.getElementById("extreme-heat-chart");
-      if (heatChartElement) {
-        try {
-          console.log("Capturing Extreme Heat Days chart...");
-          const canvas = await html2canvas(heatChartElement, {
-            scale: 2,
-            backgroundColor: "#f9fafb",
-            logging: false,
-          });
-
-          const imgData = canvas.toDataURL("image/png");
-          const imgWidth = contentWidth;
-          const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-          pdf.addImage(imgData, "PNG", leftMargin, yPos, imgWidth, imgHeight);
-          yPos += imgHeight + 8;
-
-          console.log("✅ Extreme Heat Days chart captured");
-        } catch (error) {
-          console.error("Error capturing heat chart:", error);
-          addText("⚠ Chart visualization unavailable", 10, false, [150, 150, 150]);
-          yPos += 5;
-        }
-      } else {
-        console.warn("Extreme heat chart element not found");
-        addText("⚠ Extreme heat chart not found", 10, false, [150, 150, 150]);
-        yPos += 5;
-      }
+      await addChartImage(
+        "extreme-heat-chart",
+        "Figure 2: Extreme Heat Days by Year",
+        contentWidth,
+        100
+      );
 
       addText(
         "Days exceeding 35°C can cause significant crop stress, particularly during flowering and grain-filling stages. " +
