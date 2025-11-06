@@ -449,30 +449,52 @@ export async function exportChartAsPNG(
  */
 async function captureChartAsImage(chartId: string): Promise<string | null> {
   try {
-    console.log(`Attempting to capture chart: ${chartId}`);
+    console.log(`[Chart Capture] Attempting to capture: ${chartId}`);
 
     const element = document.getElementById(chartId);
     if (!element) {
-      console.warn(`Chart element not found: ${chartId}`);
+      console.error(`[Chart Capture] ❌ Element not found: ${chartId}`);
       return null;
     }
 
-    console.log(`Found element for ${chartId}, using html2canvas...`);
+    // Check if element is visible
+    const rect = element.getBoundingClientRect();
+    console.log(`[Chart Capture] Element dimensions:`, {
+      width: rect.width,
+      height: rect.height,
+      visible: rect.width > 0 && rect.height > 0,
+    });
+
+    if (rect.width === 0 || rect.height === 0) {
+      console.error(
+        `[Chart Capture] ❌ Element has zero dimensions: ${chartId}`
+      );
+      return null;
+    }
+
+    console.log(`[Chart Capture] Capturing with html2canvas...`);
 
     // Use html2canvas to capture the entire chart container
     const canvas = await html2canvas(element, {
       backgroundColor: "#ffffff",
       scale: 2, // Higher quality
-      logging: false,
+      logging: true, // Enable logging to see what's happening
       useCORS: true,
       allowTaint: true,
     });
 
+    console.log(`[Chart Capture] Canvas created:`, {
+      width: canvas.width,
+      height: canvas.height,
+    });
+
     const dataUrl = canvas.toDataURL("image/png");
-    console.log(`Successfully captured ${chartId} using html2canvas`);
+    console.log(
+      `[Chart Capture] ✅ Successfully captured ${chartId}, data URL length: ${dataUrl.length}`
+    );
     return dataUrl;
   } catch (error) {
-    console.error(`Error capturing chart ${chartId}:`, error);
+    console.error(`[Chart Capture] ❌ Error capturing ${chartId}:`, error);
     return null;
   }
 }
@@ -492,10 +514,13 @@ export async function exportAtmosphericDataToPDF(
   filename: string = "atmospheric-report.pdf"
 ) {
   try {
+    console.log("========================================");
     console.log("Starting PDF export with charts...");
+    console.log("========================================");
 
-    // Small delay to ensure all charts are fully rendered
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    // Delay to ensure all charts are fully rendered
+    console.log("Waiting 1 second for charts to render...");
+    await new Promise((resolve) => setTimeout(resolve, 1000));
 
     const pdf = new jsPDF({
       orientation: "portrait",
@@ -565,11 +590,14 @@ export async function exportAtmosphericDataToPDF(
       maxWidth: number = 170,
       maxHeight: number = 100
     ) => {
-      console.log(`Adding chart to PDF: ${chartTitle}`);
+      console.log(`\n[PDF] ========================================`);
+      console.log(`[PDF] Adding chart to PDF: ${chartTitle}`);
+      console.log(`[PDF] Chart ID: ${chartId}`);
 
       const imageData = await captureChartAsImage(chartId);
+
       if (!imageData) {
-        console.warn(`Chart image not available: ${chartTitle}`);
+        console.error(`[PDF] ❌ Chart image not available: ${chartTitle}`);
         addText(
           `[Chart: ${chartTitle} - Image not available. Please ensure the chart is visible on screen.]`,
           9,
@@ -579,6 +607,7 @@ export async function exportAtmosphericDataToPDF(
         return;
       }
 
+      console.log(`[PDF] Image data received, length: ${imageData.length}`);
       checkNewPage(maxHeight + 15);
 
       // Add chart title
@@ -590,10 +619,14 @@ export async function exportAtmosphericDataToPDF(
 
       // Add image
       try {
+        console.log(`[PDF] Adding image to PDF at position y=${yPos}...`);
         pdf.addImage(imageData, "PNG", leftMargin, yPos, maxWidth, maxHeight);
-        console.log(`Successfully added chart to PDF: ${chartTitle}`);
+        console.log(`[PDF] ✅ Successfully added chart to PDF: ${chartTitle}`);
       } catch (error) {
-        console.error(`Failed to add image to PDF: ${chartTitle}`, error);
+        console.error(
+          `[PDF] ❌ Failed to add image to PDF: ${chartTitle}`,
+          error
+        );
         addText(
           `[Chart: ${chartTitle} - Failed to embed image]`,
           9,
@@ -602,6 +635,7 @@ export async function exportAtmosphericDataToPDF(
         );
       }
       yPos += maxHeight + 8;
+      console.log(`[PDF] ========================================\n`);
     };
 
     // ========== TITLE PAGE ==========
