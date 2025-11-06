@@ -59,10 +59,16 @@ export async function GET(request: NextRequest) {
       }
 
       // Enrich observations with full category object (including color)
-      const enrichedObservations = observations.map((obs) => ({
-        ...obs,
-        category: getAQICategory(obs.aqi),
-      }));
+      // Note: EPA API returns uppercase field names (AQI, ParameterName, etc.)
+      // but our interface uses lowercase. We need to handle both.
+      const enrichedObservations = observations.map((obs) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const aqiValue = (obs as any).AQI || obs.aqi || 0;
+        return {
+          ...obs,
+          category: getAQICategory(aqiValue),
+        };
+      });
 
       const overall = calculateOverallAQI(observations);
       const recommendations = getHealthRecommendations(overall.aqi);
@@ -116,10 +122,16 @@ export async function GET(request: NextRequest) {
         }
 
         // Enrich observations with full category object (including color)
-        const enrichedObservations = observations.map((obs) => ({
-          ...obs,
-          category: getAQICategory(obs.aqi),
-        }));
+        // Note: EPA API returns uppercase field names (AQI, ParameterName, etc.)
+        // but our interface uses lowercase. We need to handle both.
+        const enrichedObservations = observations.map((obs) => {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const aqiValue = (obs as any).AQI || obs.aqi || 0;
+          return {
+            ...obs,
+            category: getAQICategory(aqiValue),
+          };
+        });
 
         const overall = calculateOverallAQI(observations);
         const recommendations = getHealthRecommendations(overall.aqi);

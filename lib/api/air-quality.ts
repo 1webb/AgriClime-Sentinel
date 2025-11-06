@@ -240,14 +240,28 @@ export function calculateOverallAQI(observations: AirQualityData[]): {
   }
 
   // Find the highest AQI
-  const maxObservation = observations.reduce((max, obs) =>
-    obs.aqi > max.aqi ? obs : max
-  );
+  // Note: EPA API returns uppercase field names (AQI, ParameterName)
+  // but our interface uses lowercase (aqi, parameterName)
+  const maxObservation = observations.reduce((max, obs) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const obsAqi = (obs as any).AQI || obs.aqi || 0;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const maxAqi = (max as any).AQI || max.aqi || 0;
+    return obsAqi > maxAqi ? obs : max;
+  });
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const aqiValue = (maxObservation as any).AQI || maxObservation.aqi || 0;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const pollutantName =
+    (maxObservation as any).ParameterName ||
+    maxObservation.parameterName ||
+    "Unknown";
 
   return {
-    aqi: maxObservation.aqi,
-    category: getAQICategory(maxObservation.aqi),
-    dominantPollutant: maxObservation.parameterName,
+    aqi: aqiValue,
+    category: getAQICategory(aqiValue),
+    dominantPollutant: pollutantName,
   };
 }
 
