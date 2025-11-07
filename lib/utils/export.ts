@@ -367,60 +367,6 @@ export async function exportToPDF(
       );
     };
 
-    // Helper function to add chart image (same pattern as Atmospheric PDF)
-    const addChartImage = async (
-      chartId: string,
-      chartTitle: string,
-      maxWidth: number = contentWidth,
-      maxHeight: number = 100
-    ) => {
-      console.log(`\n[Agricultural PDF] ========================================`);
-      console.log(`[Agricultural PDF] Adding chart: ${chartTitle}`);
-      console.log(`[Agricultural PDF] Chart ID: ${chartId}`);
-
-      const imageData = await captureChartAsImage(chartId);
-
-      if (!imageData) {
-        console.error(`[Agricultural PDF] ❌ Chart image not available: ${chartTitle}`);
-        addText(
-          `⚠ Chart visualization unavailable: ${chartTitle}`,
-          10,
-          false,
-          [150, 150, 150]
-        );
-        return;
-      }
-
-      console.log(`[Agricultural PDF] Image data received, length: ${imageData.length}`);
-      checkPageBreak(maxHeight + 15);
-
-      // Add chart title
-      pdf.setFontSize(11);
-      pdf.setFont("helvetica", "bold");
-      pdf.setTextColor(60, 60, 60);
-      pdf.text(chartTitle, leftMargin, yPos);
-      yPos += 7;
-
-      // Add image
-      try {
-        console.log(`[Agricultural PDF] Adding image to PDF at position y=${yPos}...`);
-        pdf.addImage(imageData, "PNG", leftMargin, yPos, maxWidth, maxHeight);
-        console.log(`[Agricultural PDF] ✅ Successfully added chart: ${chartTitle}`);
-        yPos += maxHeight + 8;
-      } catch (error) {
-        console.error(
-          `[Agricultural PDF] ❌ Failed to add image to PDF: ${chartTitle}`,
-          error
-        );
-        addText(
-          `⚠ Failed to embed chart: ${chartTitle}`,
-          10,
-          false,
-          [150, 150, 150]
-        );
-      }
-    };
-
     // ==================== TITLE PAGE ====================
 
     // Decorative top bar
