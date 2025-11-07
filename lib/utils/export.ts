@@ -1078,7 +1078,7 @@ async function forceRenderAllCharts(): Promise<() => void> {
   } else {
     console.warn("[Chart Rendering] Dashboard content container not found, trying fallback...");
 
-    // Fallback: Find all chart containers
+    // Fallback: Find all chart containers explicitly
     const chartIds = [
       'atmospheric-indices-chart',
       'pollutant-comparison-chart',
@@ -1086,12 +1086,16 @@ async function forceRenderAllCharts(): Promise<() => void> {
       'skewt-diagram-canvas'
     ];
 
+    console.log(`[Chart Rendering] Fallback: Looking for ${chartIds.length} charts explicitly`);
+
     chartIds.forEach((chartId) => {
       const element = document.getElementById(chartId);
       if (element) {
+        console.log(`[Chart Rendering] Found chart: ${chartId}`);
         // Find parent tab container
         let parent = element.parentElement;
-        while (parent && parent !== document.body) {
+        let depth = 0;
+        while (parent && parent !== document.body && depth < 10) {
           const computedStyle = window.getComputedStyle(parent);
           if (computedStyle.display === 'none') {
             const originalDisplay = (parent as HTMLElement).style.display;
@@ -1099,12 +1103,13 @@ async function forceRenderAllCharts(): Promise<() => void> {
             (parent as HTMLElement).style.display = 'block';
             (parent as HTMLElement).style.visibility = 'visible';
             (parent as HTMLElement).style.opacity = '1';
-            console.log(`[Chart Rendering] Made visible parent of: ${chartId}`);
+            console.log(`[Chart Rendering] Made visible parent (depth ${depth}) of: ${chartId}`);
           }
           parent = parent.parentElement;
+          depth++;
         }
       } else {
-        console.warn(`[Chart Rendering] Chart not found: ${chartId}`);
+        console.error(`[Chart Rendering] ❌ Chart not found in DOM: ${chartId}`);
       }
     });
   }
@@ -1148,17 +1153,22 @@ export async function exportAtmosphericDataToPDF(
   let restoreVisibility: (() => void) | null = null;
 
   try {
+    console.log("\n\n========================================");
+    console.log("🚀 STARTING PDF EXPORT WITH CHARTS");
     console.log("========================================");
-    console.log("Starting PDF export with charts...");
-    console.log("========================================");
+    console.log(`County: ${countyName}, ${state}`);
+    console.log(`Filename: ${filename}`);
+    console.log("========================================\n");
 
     // Force render all charts before capturing
-    console.log("Force rendering all charts...");
+    console.log("📊 Step 1: Force rendering all charts...");
     restoreVisibility = await forceRenderAllCharts();
 
     // Additional wait for complex charts (Skew-T canvas)
-    console.log("Waiting for complex charts to render...");
-    await new Promise(resolve => setTimeout(resolve, 300));
+    console.log("⏳ Step 2: Waiting for complex charts to render...");
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    console.log("✅ Step 3: Charts should now be visible and ready for capture\n");
 
     const pdf = new jsPDF({
       orientation: "portrait",
@@ -2198,9 +2208,13 @@ export async function exportAtmosphericDataToPDF(
       );
     }
 
-    console.log("Saving PDF...");
+    console.log("\n========================================");
+    console.log("💾 Saving PDF...");
+    console.log("========================================");
     pdf.save(filename);
-    console.log("✅ PDF export complete!");
+    console.log("✅ PDF EXPORT COMPLETE!");
+    console.log(`📄 File saved as: ${filename}`);
+    console.log("========================================\n\n");
   } catch (error) {
     console.error("Error generating atmospheric PDF:", error);
     throw new Error(
