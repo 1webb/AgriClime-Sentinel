@@ -49,6 +49,8 @@ export default function ComparisonDashboard({
   const [metrics, setMetrics] = useState<CountyMetrics[]>([]);
   const [activeTab, setActiveTab] = useState<"overview" | "detailed">("overview");
 
+  console.log("🎨 ComparisonDashboard render - activeTab:", activeTab, "metrics count:", metrics.length);
+
   useEffect(() => {
     // Fetch data for all counties in parallel
     const fetchAllCountyData = async () => {
@@ -189,13 +191,20 @@ export default function ComparisonDashboard({
                   <AlertTriangle size={20} className="text-orange-600" />
                   Active Weather Alerts
                 </h3>
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={alertsChartData}>
+                <ResponsiveContainer width="100%" height={350}>
+                  <BarChart data={alertsChartData} margin={{ top: 20, right: 30, left: 20, bottom: 80 }}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" angle={-45} textAnchor="end" height={100} />
-                    <YAxis />
+                    <XAxis
+                      dataKey="name"
+                      angle={-45}
+                      textAnchor="end"
+                      height={120}
+                      interval={0}
+                      tick={{ fontSize: 12, fill: '#374151' }}
+                    />
+                    <YAxis tick={{ fontSize: 12, fill: '#374151' }} />
                     <Tooltip />
-                    <Legend />
+                    <Legend wrapperStyle={{ paddingTop: '20px' }} />
                     <Bar dataKey="alerts" fill="#F59E0B" name="Active Alerts" />
                   </BarChart>
                 </ResponsiveContainer>
@@ -207,13 +216,20 @@ export default function ComparisonDashboard({
                   <Wind size={20} className="text-red-600" />
                   Severe Weather Index (CAPE)
                 </h3>
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={severeWeatherChartData}>
+                <ResponsiveContainer width="100%" height={350}>
+                  <BarChart data={severeWeatherChartData} margin={{ top: 20, right: 30, left: 20, bottom: 80 }}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" angle={-45} textAnchor="end" height={100} />
-                    <YAxis />
+                    <XAxis
+                      dataKey="name"
+                      angle={-45}
+                      textAnchor="end"
+                      height={120}
+                      interval={0}
+                      tick={{ fontSize: 12, fill: '#374151' }}
+                    />
+                    <YAxis tick={{ fontSize: 12, fill: '#374151' }} />
                     <Tooltip />
-                    <Legend />
+                    <Legend wrapperStyle={{ paddingTop: '20px' }} />
                     <Bar dataKey="cape" fill="#DC2626" name="CAPE (J/kg)" />
                   </BarChart>
                 </ResponsiveContainer>
@@ -225,13 +241,20 @@ export default function ComparisonDashboard({
                   <Cloud size={20} className="text-purple-600" />
                   Air Quality Index
                 </h3>
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={airQualityChartData}>
+                <ResponsiveContainer width="100%" height={350}>
+                  <BarChart data={airQualityChartData} margin={{ top: 20, right: 30, left: 20, bottom: 80 }}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" angle={-45} textAnchor="end" height={100} />
-                    <YAxis />
+                    <XAxis
+                      dataKey="name"
+                      angle={-45}
+                      textAnchor="end"
+                      height={120}
+                      interval={0}
+                      tick={{ fontSize: 12, fill: '#374151' }}
+                    />
+                    <YAxis tick={{ fontSize: 12, fill: '#374151' }} />
                     <Tooltip />
-                    <Legend />
+                    <Legend wrapperStyle={{ paddingTop: '20px' }} />
                     <Bar dataKey="aqi" fill="#9333EA" name="AQI" />
                   </BarChart>
                 </ResponsiveContainer>
@@ -243,13 +266,20 @@ export default function ComparisonDashboard({
                   <TrendingUp size={20} className="text-blue-600" />
                   Temperature Trend (°F/year)
                 </h3>
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={temperatureTrendChartData}>
+                <ResponsiveContainer width="100%" height={350}>
+                  <BarChart data={temperatureTrendChartData} margin={{ top: 20, right: 30, left: 20, bottom: 80 }}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" angle={-45} textAnchor="end" height={100} />
-                    <YAxis />
+                    <XAxis
+                      dataKey="name"
+                      angle={-45}
+                      textAnchor="end"
+                      height={120}
+                      interval={0}
+                      tick={{ fontSize: 12, fill: '#374151' }}
+                    />
+                    <YAxis tick={{ fontSize: 12, fill: '#374151' }} />
                     <Tooltip />
-                    <Legend />
+                    <Legend wrapperStyle={{ paddingTop: '20px' }} />
                     <Bar dataKey="trend" fill="#3B82F6" name="Trend (°F/year)" />
                   </BarChart>
                 </ResponsiveContainer>
@@ -261,30 +291,30 @@ export default function ComparisonDashboard({
             <div className="overflow-x-auto">
               <table className="w-full border-collapse">
                 <thead>
-                  <tr className="bg-gray-100">
-                    <th className="border border-gray-300 px-4 py-2 text-left">County</th>
-                    <th className="border border-gray-300 px-4 py-2 text-center">Alerts</th>
-                    <th className="border border-gray-300 px-4 py-2 text-center">CAPE (J/kg)</th>
-                    <th className="border border-gray-300 px-4 py-2 text-center">AQI</th>
-                    <th className="border border-gray-300 px-4 py-2 text-center">Temp Trend (°F/yr)</th>
+                  <tr className="bg-gray-800">
+                    <th className="border border-gray-300 px-4 py-3 text-left text-white font-bold">County</th>
+                    <th className="border border-gray-300 px-4 py-3 text-center text-white font-bold">Alerts</th>
+                    <th className="border border-gray-300 px-4 py-3 text-center text-white font-bold">CAPE (J/kg)</th>
+                    <th className="border border-gray-300 px-4 py-3 text-center text-white font-bold">AQI</th>
+                    <th className="border border-gray-300 px-4 py-3 text-center text-white font-bold">Temp Trend (°F/yr)</th>
                   </tr>
                 </thead>
                 <tbody>
                   {metrics.map((metric, index) => (
                     <tr key={metric.fips} className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}>
-                      <td className="border border-gray-300 px-4 py-2 font-semibold">
+                      <td className="border border-gray-300 px-4 py-3 font-bold text-gray-900">
                         {metric.name}, {metric.state}
                       </td>
-                      <td className="border border-gray-300 px-4 py-2 text-center">
+                      <td className="border border-gray-300 px-4 py-3 text-center text-gray-900 font-semibold">
                         {metric.error ? "N/A" : metric.alerts}
                       </td>
-                      <td className="border border-gray-300 px-4 py-2 text-center">
+                      <td className="border border-gray-300 px-4 py-3 text-center text-gray-900 font-semibold">
                         {metric.error ? "N/A" : metric.severeWeatherScore.toFixed(0)}
                       </td>
-                      <td className="border border-gray-300 px-4 py-2 text-center">
+                      <td className="border border-gray-300 px-4 py-3 text-center text-gray-900 font-semibold">
                         {metric.error ? "N/A" : metric.airQualityAQI}
                       </td>
-                      <td className="border border-gray-300 px-4 py-2 text-center">
+                      <td className="border border-gray-300 px-4 py-3 text-center text-gray-900 font-semibold">
                         {metric.error ? "N/A" : metric.temperatureTrend.toFixed(3)}
                       </td>
                     </tr>

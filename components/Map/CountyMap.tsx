@@ -13,6 +13,7 @@ interface CountyMapProps {
   hideMobileZoomControls?: boolean;
   radarEnabled?: boolean;
   onMapReady?: (map: L.Map) => void;
+  historicalYear?: number | null; // For historical playback mode
 }
 
 export default function CountyMap({
@@ -22,9 +23,11 @@ export default function CountyMap({
   hideMobileZoomControls = false,
   radarEnabled = false,
   onMapReady,
+  historicalYear = null,
 }: CountyMapProps) {
   const mapRef = useRef<L.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
+  const geoJsonLayerRef = useRef<L.GeoJSON | null>(null); // Keep reference to GeoJSON layer
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [loadingProgress, setLoadingProgress] = useState(0);
@@ -44,6 +47,10 @@ export default function CountyMap({
       const params = new URLSearchParams({ layer });
       if (cropType && layer === "crop_risk") {
         params.append("cropType", cropType);
+      }
+      // Add historical year if in historical mode
+      if (historicalYear !== null) {
+        params.append("year", historicalYear.toString());
       }
 
       const response = await fetch(`/api/map-data?${params}`);
@@ -113,13 +120,6 @@ export default function CountyMap({
       setLoadingProgress(80);
       setLoadingStep("Rendering map...");
 
-      // Clear existing layers
-      mapRef.current.eachLayer((layer) => {
-        if (layer instanceof L.GeoJSON) {
-          mapRef.current?.removeLayer(layer);
-        }
-      });
-
       // Determine the value field and label based on layer type
       let valueField: string;
       let label: string;
@@ -159,11 +159,47 @@ export default function CountyMap({
         ])
       );
 
-      // Step 4: Add GeoJSON layer with styling (start invisible for fade-in)
+      // Step 4: Update existing layer or create new one
       setLoadingProgress(90);
       setLoadingStep("Applying colors...");
 
-      L.geoJSON(
+      // If layer already exists, update colors smoothly
+      if (geoJsonLayerRef.current && mapRef.current) {
+        geoJsonLayerRef.current.eachLayer((layer) => {
+          if (layer instanceof L.Path) {
+            // Access feature from the layer
+            const feature = (layer as any).feature;
+            const fips = feature?.properties?.fips;
+            const data = dataMap.get(fips);
+            const value = data?.[valueField];
+            const color =
+              value !== null && value !== undefined
+                ? getColorForValue(value, layerConfig)
+                : "#CCCCCC";
+
+            // Update color smoothly with CSS transition
+            layer.setStyle({
+              fillColor: color,
+            });
+
+            // Update tooltip
+            const name = feature?.properties?.name;
+            const state = feature?.properties?.state;
+            layer.unbindTooltip();
+            layer.bindTooltip(
+              `<strong>${name}, ${state}</strong><br/>${label}: ${
+                value !== null && value !== undefined ? value.toFixed(2) : "N/A"
+              } ${layerConfig.unit}`
+            );
+          }
+        });
+        setLoading(false);
+        setLoadingProgress(100);
+        return;
+      }
+
+      // First time: Create the GeoJSON layer
+      geoJsonLayerRef.current = L.geoJSON(
         {
           type: "FeatureCollection",
           features: counties.map(
@@ -259,7 +295,7 @@ export default function CountyMap({
       setLoading(false);
       setLoadingProgress(0);
     }
-  }, [layer, cropType, onCountyClick]);
+  }, [layer, cropType, onCountyClick, historicalYear]);
 
   // Initialize map once
   useEffect(() => {
@@ -299,13 +335,13 @@ export default function CountyMap({
     };
   }, []);
 
-  // Load data when layer or crop changes
+  // Load data when layer, crop, or historical year changes
   useEffect(() => {
     if (mapRef.current) {
       loadMapData();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [layer, cropType]);
+  }, [layer, cropType, historicalYear]);
 
   // Toggle zoom controls visibility based on mobile sidebar state
   useEffect(() => {
@@ -375,6 +411,14 @@ export default function CountyMap({
         <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded shadow-lg max-w-md">
           <div className="font-semibold mb-1">Error Loading Map</div>
           <div className="text-sm">{error}</div>
+        </div>
+      )}
+
+      {/* Historical Mode Indicator - Always rendered to prevent blinking */}
+      {historicalYear !== null && (
+        <div className={`absolute top-4 left-1/2 transform -translate-x-1/2 bg-purple-600 text-white px-4 py-2 rounded-lg shadow-lg font-bold text-sm z-[1000] flex items-center gap-2 transition-opacity duration-300 ${loading ? 'opacity-50' : 'opacity-100'}`}>
+          <span>📅</span>
+          <span>Historical Data: {historicalYear}</span>
         </div>
       )}
     </div>

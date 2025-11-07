@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { Menu, X } from "lucide-react";
 import { MapDataLayer, CropType } from "@/types";
@@ -68,6 +68,20 @@ export default function Home() {
   const [selectedCountiesForComparison, setSelectedCountiesForComparison] = useState<SelectedCountyData[]>([]);
   const [showComparisonDashboard, setShowComparisonDashboard] = useState(false);
 
+  // Use ref to track latest comparison mode state for event handlers
+  const isComparisonModeRef = useRef(isComparisonMode);
+  const selectedCountiesRef = useRef(selectedCountiesForComparison);
+
+  // Keep refs in sync with state
+  useEffect(() => {
+    isComparisonModeRef.current = isComparisonMode;
+    console.log("🔄 Comparison mode ref updated:", isComparisonMode);
+  }, [isComparisonMode]);
+
+  useEffect(() => {
+    selectedCountiesRef.current = selectedCountiesForComparison;
+  }, [selectedCountiesForComparison]);
+
   // Historical playback state
   const [isHistoricalMode, setIsHistoricalMode] = useState(false);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
@@ -75,6 +89,7 @@ export default function Home() {
 
   // Radar overlay state
   const [radarEnabled, setRadarEnabled] = useState(false);
+  const [radarOpacity, setRadarOpacity] = useState(0.6);
   const [mapInstance, setMapInstance] = useState<L.Map | null>(null);
 
   /**
@@ -85,7 +100,13 @@ export default function Home() {
    * - After: Fetches only the clicked county (<100ms)
    * - 99.7% faster response time
    */
-  const handleCountyClick = async (fips: string) => {
+  const handleCountyClick = useCallback(async (fips: string) => {
+    // Use ref to get the latest state value
+    const currentComparisonMode = isComparisonModeRef.current;
+    const currentSelectedCounties = selectedCountiesRef.current;
+
+    console.log("🗺️ County clicked:", fips, "Comparison mode (ref):", currentComparisonMode);
+
     // Fetch only the clicked county (fast, <100ms)
     try {
       const response = await fetch(`/api/counties?fips=${fips}`);
@@ -109,21 +130,29 @@ export default function Home() {
       };
 
       // If in comparison mode, add to comparison list
-      if (isComparisonMode) {
+      if (currentComparisonMode) {
+        console.log("📊 Adding to comparison:", countyData.name, countyData.state);
+
         // Check if already selected
-        if (selectedCountiesForComparison.some(c => c.fips === fips)) {
+        if (currentSelectedCounties.some(c => c.fips === fips)) {
+          console.log("⚠️ County already selected");
           return; // Already selected
         }
 
         // Check max limit (5 counties)
-        if (selectedCountiesForComparison.length >= 5) {
+        if (currentSelectedCounties.length >= 5) {
           alert("Maximum 5 counties can be compared at once");
           return;
         }
 
-        setSelectedCountiesForComparison(prev => [...prev, countyData]);
+        setSelectedCountiesForComparison(prev => {
+          const updated = [...prev, countyData];
+          console.log("✅ Updated comparison list:", updated);
+          return updated;
+        });
       } else {
         // Normal single-county mode
+        console.log("📍 Opening dashboard for:", countyData.name, countyData.state);
         setSelectedCountyData(countyData);
         setTimeout(() => {
           setSelectedCounty(fips);
@@ -140,8 +169,8 @@ export default function Home() {
         longitude: -98.5795,
       };
 
-      if (isComparisonMode) {
-        if (!selectedCountiesForComparison.some(c => c.fips === fips) && selectedCountiesForComparison.length < 5) {
+      if (currentComparisonMode) {
+        if (!currentSelectedCounties.some(c => c.fips === fips) && currentSelectedCounties.length < 5) {
           setSelectedCountiesForComparison(prev => [...prev, countyData]);
         }
       } else {
@@ -151,7 +180,7 @@ export default function Home() {
         }, 150);
       }
     }
-  };
+  }, []);
 
   const handleCloseDashboard = () => {
     setSelectedCounty(null);
@@ -163,9 +192,12 @@ export default function Home() {
   };
 
   const handleToggleComparisonMode = () => {
-    setIsComparisonMode(!isComparisonMode);
+    const newMode = !isComparisonMode;
+    console.log("🔄 Toggling comparison mode:", newMode ? "ON" : "OFF");
+    setIsComparisonMode(newMode);
     if (isComparisonMode) {
       // Exiting comparison mode - clear selections
+      console.log("🧹 Clearing comparison selections");
       setSelectedCountiesForComparison([]);
       setShowComparisonDashboard(false);
     }
@@ -193,8 +225,7 @@ export default function Home() {
 
   const handleYearChange = (year: number) => {
     setSelectedYear(year);
-    // In a full implementation, this would trigger a map data reload for the selected year
-    console.log(`Historical playback: Year ${year}`);
+    console.log(`Historical Playback: Year ${year}`);
   };
 
   const handlePlayPause = () => {
@@ -429,9 +460,32 @@ export default function Home() {
                   : "Toggle to show precipitation radar"}
               </p>
               {radarEnabled && (
-                <p className="text-xs text-green-700 mt-2 font-semibold">
-                  ✅ Live radar from Iowa State Mesonet
-                </p>
+                <>
+                  <p className="text-xs text-green-700 mt-2 font-semibold">
+                    ✅ Live radar from RainViewer
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    🔄 Updates every 5 minutes
+                  </p>
+                  <div className="mt-3">
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="text-xs font-semibold text-gray-700">
+                        Opacity
+                      </label>
+                      <span className="text-xs text-gray-600">
+                        {Math.round(radarOpacity * 100)}%
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      value={radarOpacity * 100}
+                      onChange={(e) => setRadarOpacity(Number(e.target.value) / 100)}
+                      className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                    />
+                  </div>
+                </>
               )}
             </div>
 
@@ -504,14 +558,27 @@ export default function Home() {
             hideMobileZoomControls={isMobileSidebarOpen}
             radarEnabled={radarEnabled}
             onMapReady={setMapInstance}
+            historicalYear={isHistoricalMode ? selectedYear : null}
           />
 
           {/* NEXRAD Radar Overlay */}
           <RadarOverlay
             map={mapInstance}
             enabled={radarEnabled}
-            opacity={0.6}
+            opacity={radarOpacity}
           />
+
+          {/* Comparison Mode Active Banner */}
+          {isComparisonMode && (
+            <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-[1000] pointer-events-none">
+              <div className="bg-blue-600 text-white px-6 py-3 rounded-full shadow-2xl flex items-center gap-3 animate-pulse">
+                <div className="w-3 h-3 bg-white rounded-full animate-ping"></div>
+                <span className="font-bold text-sm sm:text-base">
+                  Comparison Mode Active - Click counties to compare ({selectedCountiesForComparison.length}/5)
+                </span>
+              </div>
+            </div>
+          )}
         </main>
       </div>
 

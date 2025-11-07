@@ -140,9 +140,9 @@ body {
   display: none; /* Chrome, Safari, Opera */
 }
 
-/* Smooth fade-in transition for map polygons */
+/* Smooth fade-in and color transition for map polygons */
 .county-polygon {
-  transition: fill-opacity 1s ease-in-out;
+  transition: fill-opacity 0.8s ease-in-out, fill 0.8s ease-in-out !important;
 }
 
 /* Adjust Leaflet attribution to not conflict with mobile controls button */

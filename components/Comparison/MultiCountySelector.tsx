@@ -23,8 +23,10 @@ export default function MultiCountySelector({
 }: MultiCountySelectorProps) {
   const canAddMore = selectedCounties.length < maxCounties;
 
+  console.log("🎯 MultiCountySelector rendered, counties:", selectedCounties.length);
+
   return (
-    <div className="bg-white p-3 sm:p-4 rounded-lg shadow">
+    <div className="bg-white p-3 sm:p-4 rounded-lg shadow border-2 border-blue-300">
       <div className="flex items-center justify-between mb-3">
         <h3 className="font-bold text-sm sm:text-base text-gray-900">
           Selected Counties ({selectedCounties.length}/{maxCounties})
