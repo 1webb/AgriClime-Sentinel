@@ -292,6 +292,57 @@ export async function exportToPDF(
       }
     };
 
+    // Helper function to add chart image
+    const addChartImage = async (
+      chartId: string,
+      chartTitle: string,
+      maxWidth: number = contentWidth,
+      maxHeight: number = 100
+    ) => {
+      console.log(`\n[Agricultural PDF] ========================================`);
+      console.log(`[Agricultural PDF] Adding chart: ${chartTitle}`);
+      console.log(`[Agricultural PDF] Chart ID: ${chartId}`);
+
+      const imageData = await captureChartAsImage(chartId);
+
+      if (!imageData) {
+        console.error(`[Agricultural PDF] ❌ Chart image not available: ${chartTitle}`);
+        addText(
+          `⚠ Chart visualization unavailable: ${chartTitle}`,
+          10,
+          false,
+          [150, 150, 150]
+        );
+        return;
+      }
+
+      console.log(`[Agricultural PDF] Image data received, length: ${imageData.length}`);
+      checkPageBreak(maxHeight + 15);
+
+      // Add chart title
+      pdf.setFontSize(11);
+      pdf.setFont("helvetica", "bold");
+      pdf.setTextColor(60, 60, 60);
+      pdf.text(chartTitle, leftMargin, yPos);
+      yPos += 7;
+
+      // Add image
+      try {
+        console.log(`[Agricultural PDF] Adding image to PDF at position y=${yPos}...`);
+        pdf.addImage(imageData, "PNG", leftMargin, yPos, maxWidth, maxHeight);
+        console.log(`[Agricultural PDF] ✅ Successfully added chart: ${chartTitle}`);
+        yPos += maxHeight + 8;
+      } catch (error) {
+        console.error(`[Agricultural PDF] ❌ Failed to add image to PDF: ${chartTitle}`, error);
+        addText(
+          `⚠ Failed to embed chart: ${chartTitle}`,
+          10,
+          false,
+          [150, 150, 150]
+        );
+      }
+    };
+
     // Helper function to add professional footer
     const addFooter = () => {
       const footerY = pageHeight - 15;
@@ -575,62 +626,12 @@ export async function exportToPDF(
       // ========== CHART 1: Historical Drought Trends ==========
       addSectionHeader("4.1 Drought Frequency and Severity (50-Year Analysis)", [168, 85, 247], 2);
 
-      // Capture chart directly with html2canvas
-      const chart1Element = document.getElementById("historical-trends-chart");
-      if (chart1Element) {
-        try {
-          console.log("[Agricultural PDF] Capturing Chart 1 with html2canvas...");
-
-          // Check visibility
-          const rect1 = chart1Element.getBoundingClientRect();
-          console.log("[Agricultural PDF] Chart 1 rect:", rect1);
-
-          // Check if SVG exists
-          const svg1 = chart1Element.querySelector("svg");
-          if (!svg1) {
-            console.error("[Agricultural PDF] ❌ Chart 1 SVG not found!");
-            addText("⚠ Chart visualization unavailable: Figure 1: Historical Drought Trends", 10, false, [150, 150, 150]);
-            yPos += 5;
-          } else {
-            console.log("[Agricultural PDF] Chart 1 SVG found, capturing...");
-
-            const canvas1 = await html2canvas(chart1Element, {
-              scale: 2,
-              backgroundColor: "#f9fafb",
-              logging: false,
-              useCORS: true,
-              allowTaint: true,
-            });
-
-            console.log("[Agricultural PDF] Chart 1 canvas created:", canvas1.width, "x", canvas1.height);
-
-            if (canvas1.width === 0 || canvas1.height === 0) {
-              console.error("[Agricultural PDF] ❌ Chart 1 canvas has zero dimensions!");
-              addText("⚠ Chart visualization unavailable: Figure 1: Historical Drought Trends", 10, false, [150, 150, 150]);
-              yPos += 5;
-            } else {
-              const imgData1 = canvas1.toDataURL("image/png");
-              const imgWidth1 = contentWidth;
-              const imgHeight1 = (canvas1.height * imgWidth1) / canvas1.width;
-
-              checkPageBreak(imgHeight1 + 10);
-
-              pdf.addImage(imgData1, "PNG", leftMargin, yPos, imgWidth1, imgHeight1);
-              yPos += imgHeight1 + 8;
-
-              console.log("[Agricultural PDF] ✅ Chart 1 added to PDF");
-            }
-          }
-        } catch (error) {
-          console.error("[Agricultural PDF] ❌ Error capturing Chart 1:", error);
-          addText("⚠ Chart visualization unavailable: Figure 1: Historical Drought Trends", 10, false, [150, 150, 150]);
-          yPos += 5;
-        }
-      } else {
-        console.error("[Agricultural PDF] ❌ Chart 1 element not found");
-        addText("⚠ Chart visualization unavailable: Figure 1: Historical Drought Trends", 10, false, [150, 150, 150]);
-        yPos += 5;
-      }
+      await addChartImage(
+        "historical-trends-chart",
+        "Figure 1: Historical Drought Trends",
+        contentWidth,
+        100
+      );
 
       addText(
         "The chart above shows the historical pattern of drought events and their average severity. " +
@@ -643,62 +644,12 @@ export async function exportToPDF(
       // ========== CHART 2: Extreme Heat Days ==========
       addSectionHeader("4.2 Extreme Heat Days by Year", [168, 85, 247], 2);
 
-      // Capture chart directly with html2canvas
-      const chart2Element = document.getElementById("extreme-heat-chart");
-      if (chart2Element) {
-        try {
-          console.log("[Agricultural PDF] Capturing Chart 2 with html2canvas...");
-
-          // Check visibility
-          const rect2 = chart2Element.getBoundingClientRect();
-          console.log("[Agricultural PDF] Chart 2 rect:", rect2);
-
-          // Check if SVG exists
-          const svg2 = chart2Element.querySelector("svg");
-          if (!svg2) {
-            console.error("[Agricultural PDF] ❌ Chart 2 SVG not found!");
-            addText("⚠ Chart visualization unavailable: Figure 2: Extreme Heat Days by Year", 10, false, [150, 150, 150]);
-            yPos += 5;
-          } else {
-            console.log("[Agricultural PDF] Chart 2 SVG found, capturing...");
-
-            const canvas2 = await html2canvas(chart2Element, {
-              scale: 2,
-              backgroundColor: "#f9fafb",
-              logging: false,
-              useCORS: true,
-              allowTaint: true,
-            });
-
-            console.log("[Agricultural PDF] Chart 2 canvas created:", canvas2.width, "x", canvas2.height);
-
-            if (canvas2.width === 0 || canvas2.height === 0) {
-              console.error("[Agricultural PDF] ❌ Chart 2 canvas has zero dimensions!");
-              addText("⚠ Chart visualization unavailable: Figure 2: Extreme Heat Days by Year", 10, false, [150, 150, 150]);
-              yPos += 5;
-            } else {
-              const imgData2 = canvas2.toDataURL("image/png");
-              const imgWidth2 = contentWidth;
-              const imgHeight2 = (canvas2.height * imgWidth2) / canvas2.width;
-
-              checkPageBreak(imgHeight2 + 10);
-
-              pdf.addImage(imgData2, "PNG", leftMargin, yPos, imgWidth2, imgHeight2);
-              yPos += imgHeight2 + 8;
-
-              console.log("[Agricultural PDF] ✅ Chart 2 added to PDF");
-            }
-          }
-        } catch (error) {
-          console.error("[Agricultural PDF] ❌ Error capturing Chart 2:", error);
-          addText("⚠ Chart visualization unavailable: Figure 2: Extreme Heat Days by Year", 10, false, [150, 150, 150]);
-          yPos += 5;
-        }
-      } else {
-        console.error("[Agricultural PDF] ❌ Chart 2 element not found");
-        addText("⚠ Chart visualization unavailable: Figure 2: Extreme Heat Days by Year", 10, false, [150, 150, 150]);
-        yPos += 5;
-      }
+      await addChartImage(
+        "extreme-heat-chart",
+        "Figure 2: Extreme Heat Days by Year",
+        contentWidth,
+        100
+      );
 
       addText(
         "Days exceeding 35°C can cause significant crop stress, particularly during flowering and grain-filling stages. " +
