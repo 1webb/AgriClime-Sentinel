@@ -559,12 +559,46 @@ export async function exportToPDF(
       // ========== CHART 1: Historical Drought Trends ==========
       addSectionHeader("4.1 Drought Frequency and Severity (50-Year Analysis)", [168, 85, 247], 2);
 
-      await addChartImage(
-        "historical-trends-chart",
-        "Figure 1: Historical Drought Trends",
-        contentWidth,
-        100
-      );
+      // Capture chart directly with html2canvas
+      const chart1Element = document.getElementById("historical-trends-chart");
+      if (chart1Element) {
+        try {
+          console.log("[Agricultural PDF] Capturing Chart 1 with html2canvas...");
+
+          // Check visibility
+          const rect1 = chart1Element.getBoundingClientRect();
+          console.log("[Agricultural PDF] Chart 1 rect:", rect1);
+
+          const canvas1 = await html2canvas(chart1Element, {
+            scale: 2,
+            backgroundColor: "#f9fafb",
+            logging: true,
+            useCORS: true,
+            allowTaint: true,
+          });
+
+          console.log("[Agricultural PDF] Chart 1 canvas created:", canvas1.width, "x", canvas1.height);
+
+          const imgData1 = canvas1.toDataURL("image/png");
+          const imgWidth1 = contentWidth;
+          const imgHeight1 = (canvas1.height * imgWidth1) / canvas1.width;
+
+          checkPageBreak(imgHeight1 + 10);
+
+          pdf.addImage(imgData1, "PNG", leftMargin, yPos, imgWidth1, imgHeight1);
+          yPos += imgHeight1 + 8;
+
+          console.log("[Agricultural PDF] ✅ Chart 1 added to PDF");
+        } catch (error) {
+          console.error("[Agricultural PDF] ❌ Error capturing Chart 1:", error);
+          addText("⚠ Chart visualization unavailable: Figure 1: Historical Drought Trends", 10, false, [150, 150, 150]);
+          yPos += 5;
+        }
+      } else {
+        console.error("[Agricultural PDF] ❌ Chart 1 element not found");
+        addText("⚠ Chart visualization unavailable: Figure 1: Historical Drought Trends", 10, false, [150, 150, 150]);
+        yPos += 5;
+      }
 
       addText(
         "The chart above shows the historical pattern of drought events and their average severity. " +
@@ -577,12 +611,46 @@ export async function exportToPDF(
       // ========== CHART 2: Extreme Heat Days ==========
       addSectionHeader("4.2 Extreme Heat Days by Year", [168, 85, 247], 2);
 
-      await addChartImage(
-        "extreme-heat-chart",
-        "Figure 2: Extreme Heat Days by Year",
-        contentWidth,
-        100
-      );
+      // Capture chart directly with html2canvas
+      const chart2Element = document.getElementById("extreme-heat-chart");
+      if (chart2Element) {
+        try {
+          console.log("[Agricultural PDF] Capturing Chart 2 with html2canvas...");
+
+          // Check visibility
+          const rect2 = chart2Element.getBoundingClientRect();
+          console.log("[Agricultural PDF] Chart 2 rect:", rect2);
+
+          const canvas2 = await html2canvas(chart2Element, {
+            scale: 2,
+            backgroundColor: "#f9fafb",
+            logging: true,
+            useCORS: true,
+            allowTaint: true,
+          });
+
+          console.log("[Agricultural PDF] Chart 2 canvas created:", canvas2.width, "x", canvas2.height);
+
+          const imgData2 = canvas2.toDataURL("image/png");
+          const imgWidth2 = contentWidth;
+          const imgHeight2 = (canvas2.height * imgWidth2) / canvas2.width;
+
+          checkPageBreak(imgHeight2 + 10);
+
+          pdf.addImage(imgData2, "PNG", leftMargin, yPos, imgWidth2, imgHeight2);
+          yPos += imgHeight2 + 8;
+
+          console.log("[Agricultural PDF] ✅ Chart 2 added to PDF");
+        } catch (error) {
+          console.error("[Agricultural PDF] ❌ Error capturing Chart 2:", error);
+          addText("⚠ Chart visualization unavailable: Figure 2: Extreme Heat Days by Year", 10, false, [150, 150, 150]);
+          yPos += 5;
+        }
+      } else {
+        console.error("[Agricultural PDF] ❌ Chart 2 element not found");
+        addText("⚠ Chart visualization unavailable: Figure 2: Extreme Heat Days by Year", 10, false, [150, 150, 150]);
+        yPos += 5;
+      }
 
       addText(
         "Days exceeding 35°C can cause significant crop stress, particularly during flowering and grain-filling stages. " +
