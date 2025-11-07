@@ -905,14 +905,24 @@ async function captureChartAsImage(chartId: string): Promise<string | null> {
     const element = document.getElementById(chartId);
     if (!element) {
       console.error(`[Chart Capture] ❌ Element not found: ${chartId}`);
+      console.log(`[Chart Capture] Available chart IDs:`,
+        Array.from(document.querySelectorAll('[id*="chart"], [id*="canvas"]'))
+          .map(el => el.id)
+          .filter(id => id)
+      );
       return null;
     }
 
     // Check if element is visible
     const rect = element.getBoundingClientRect();
-    console.log(`[Chart Capture] Element dimensions:`, {
+    const computedStyle = window.getComputedStyle(element);
+    console.log(`[Chart Capture] Element state:`, {
+      id: chartId,
       width: rect.width,
       height: rect.height,
+      display: computedStyle.display,
+      visibility: computedStyle.visibility,
+      opacity: computedStyle.opacity,
       visible: rect.width > 0 && rect.height > 0,
     });
 
@@ -920,6 +930,17 @@ async function captureChartAsImage(chartId: string): Promise<string | null> {
       console.error(
         `[Chart Capture] ❌ Element has zero dimensions: ${chartId}`
       );
+
+      // Check parent visibility
+      let parent = element.parentElement;
+      let depth = 0;
+      while (parent && depth < 5) {
+        const parentStyle = window.getComputedStyle(parent);
+        console.log(`[Chart Capture] Parent ${depth} display:`, parentStyle.display);
+        parent = parent.parentElement;
+        depth++;
+      }
+
       return null;
     }
 
@@ -1040,43 +1061,69 @@ async function forceRenderAllCharts(): Promise<() => void> {
 
     tabContainers.forEach((container, index) => {
       const element = container as HTMLElement;
+      const computedStyle = window.getComputedStyle(element);
       const originalDisplay = element.style.display;
 
       // Store original state
       originalStates.push({ element, display: originalDisplay });
 
-      // Force visible if hidden
-      if (originalDisplay === 'none') {
+      // Force visible if hidden (check both inline style and computed style)
+      if (originalDisplay === 'none' || computedStyle.display === 'none') {
         element.style.display = 'block';
+        element.style.visibility = 'visible';
+        element.style.opacity = '1';
         console.log(`[Chart Rendering] Made tab ${index + 1} visible (was hidden)`);
       }
     });
   } else {
     console.warn("[Chart Rendering] Dashboard content container not found, trying fallback...");
 
-    // Fallback: Find all elements with display:none that contain charts
-    const hiddenContainers = document.querySelectorAll('div[style*="display: none"]');
-    hiddenContainers.forEach((container) => {
-      const element = container as HTMLElement;
-      // Check if it contains chart elements
-      if (element.querySelector('svg') || element.id.includes('chart')) {
-        const originalDisplay = element.style.display;
-        originalStates.push({ element, display: originalDisplay });
-        element.style.display = 'block';
-        console.log(`[Chart Rendering] Made visible: ${element.id || 'unnamed container'}`);
+    // Fallback: Find all chart containers
+    const chartIds = [
+      'atmospheric-indices-chart',
+      'pollutant-comparison-chart',
+      'temperature-trend-chart',
+      'skewt-diagram-canvas'
+    ];
+
+    chartIds.forEach((chartId) => {
+      const element = document.getElementById(chartId);
+      if (element) {
+        // Find parent tab container
+        let parent = element.parentElement;
+        while (parent && parent !== document.body) {
+          const computedStyle = window.getComputedStyle(parent);
+          if (computedStyle.display === 'none') {
+            const originalDisplay = (parent as HTMLElement).style.display;
+            originalStates.push({ element: parent as HTMLElement, display: originalDisplay });
+            (parent as HTMLElement).style.display = 'block';
+            (parent as HTMLElement).style.visibility = 'visible';
+            (parent as HTMLElement).style.opacity = '1';
+            console.log(`[Chart Rendering] Made visible parent of: ${chartId}`);
+          }
+          parent = parent.parentElement;
+        }
+      } else {
+        console.warn(`[Chart Rendering] Chart not found: ${chartId}`);
       }
     });
   }
 
   // Wait for charts to render (Recharts needs time to render SVGs)
   console.log("[Chart Rendering] Waiting for charts to fully render...");
-  await new Promise((resolve) => setTimeout(resolve, 2000));
+  await new Promise((resolve) => setTimeout(resolve, 1500));
 
   // Return cleanup function
   return () => {
     console.log("[Chart Rendering] Restoring original visibility states...");
     originalStates.forEach(({ element, display }) => {
-      element.style.display = display;
+      if (display) {
+        element.style.display = display;
+      } else {
+        element.style.removeProperty('display');
+      }
+      element.style.removeProperty('visibility');
+      element.style.removeProperty('opacity');
     });
     console.log("[Chart Rendering] ✅ Visibility restored");
   };
@@ -1109,9 +1156,9 @@ export async function exportAtmosphericDataToPDF(
     console.log("Force rendering all charts...");
     restoreVisibility = await forceRenderAllCharts();
 
-    // Wait for charts to fully render
-    console.log("Waiting for charts to render...");
-    await new Promise(resolve => setTimeout(resolve, 500));
+    // Additional wait for complex charts (Skew-T canvas)
+    console.log("Waiting for complex charts to render...");
+    await new Promise(resolve => setTimeout(resolve, 300));
 
     const pdf = new jsPDF({
       orientation: "portrait",
@@ -1240,32 +1287,13 @@ export async function exportAtmosphericDataToPDF(
       }
 
       console.log(`[PDF] Image data received, length: ${imageData.length}`);
+      console.log(`[PDF] Image data preview:`, imageData.substring(0, 100));
 
-      // Get actual image dimensions to maintain aspect ratio
-      const img = new Image();
-      img.src = imageData;
+      // Use fixed dimensions for reliability
+      const finalWidth = Math.min(maxWidth, 160);
+      const finalHeight = Math.min(maxHeight, 100);
 
-      await new Promise<void>((resolve) => {
-        img.onload = () => resolve();
-        img.onerror = () => resolve();
-      });
-
-      const imgWidth = img.width || 800;
-      const imgHeight = img.height || 600;
-      const aspectRatio = imgWidth / imgHeight;
-
-      // Calculate dimensions maintaining aspect ratio
-      let finalWidth = maxWidth;
-      let finalHeight = finalWidth / aspectRatio;
-
-      // If height exceeds max, scale down
-      if (finalHeight > maxHeight) {
-        finalHeight = maxHeight;
-        finalWidth = finalHeight * aspectRatio;
-      }
-
-      console.log(`[PDF] Image dimensions: ${imgWidth}x${imgHeight}, aspect ratio: ${aspectRatio.toFixed(2)}`);
-      console.log(`[PDF] Final dimensions: ${finalWidth.toFixed(1)}x${finalHeight.toFixed(1)}`);
+      console.log(`[PDF] Using dimensions: ${finalWidth}x${finalHeight}`);
 
       checkNewPage(finalHeight + 15);
 
