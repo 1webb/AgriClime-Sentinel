@@ -116,6 +116,10 @@ async function forceRenderAgriculturalCharts(): Promise<() => void> {
 
   console.log("[Agricultural Chart Rendering] Dashboard content found");
 
+  // Store original scroll position
+  const originalScrollTop = dashboardContent.scrollTop;
+  console.log("[Agricultural Chart Rendering] Original scroll position:", originalScrollTop);
+
   // Check if charts exist
   const chart1 = document.getElementById("historical-trends-chart");
   const chart2 = document.getElementById("extreme-heat-chart");
@@ -123,24 +127,35 @@ async function forceRenderAgriculturalCharts(): Promise<() => void> {
   console.log("[Agricultural Chart Rendering] Chart 1 (historical-trends-chart):", chart1 ? "✅ Found" : "❌ Not found");
   console.log("[Agricultural Chart Rendering] Chart 2 (extreme-heat-chart):", chart2 ? "✅ Found" : "❌ Not found");
 
+  // Scroll charts into view to ensure they're rendered
   if (chart1) {
+    console.log("[Agricultural Chart Rendering] Scrolling Chart 1 into view...");
+    chart1.scrollIntoView({ behavior: "auto", block: "center" });
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
     const rect1 = chart1.getBoundingClientRect();
     console.log("[Agricultural Chart Rendering] Chart 1 dimensions:", { width: rect1.width, height: rect1.height });
   }
 
   if (chart2) {
+    console.log("[Agricultural Chart Rendering] Scrolling Chart 2 into view...");
+    chart2.scrollIntoView({ behavior: "auto", block: "center" });
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
     const rect2 = chart2.getBoundingClientRect();
     console.log("[Agricultural Chart Rendering] Chart 2 dimensions:", { width: rect2.width, height: rect2.height });
   }
 
-  // Wait longer for Recharts to render all SVG charts
-  console.log("[Agricultural Chart Rendering] Waiting 3 seconds for charts to fully render...");
-  await new Promise((resolve) => setTimeout(resolve, 3000));
+  // Wait for Recharts to fully render all SVG charts
+  console.log("[Agricultural Chart Rendering] Waiting 2 more seconds for charts to fully render...");
+  await new Promise((resolve) => setTimeout(resolve, 2000));
 
   console.log("[Agricultural Chart Rendering] ✅ All charts should be rendered now");
 
-  // Return cleanup function (no-op for agricultural dashboard since no tabs)
+  // Return cleanup function to restore scroll position
   return () => {
+    console.log("[Agricultural Chart Rendering] Restoring scroll position...");
+    dashboardContent.scrollTop = originalScrollTop;
     console.log("[Agricultural Chart Rendering] Cleanup complete");
   };
 }

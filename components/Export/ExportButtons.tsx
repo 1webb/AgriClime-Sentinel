@@ -56,6 +56,8 @@ export default function ExportButtons({
         "pdf"
       );
       await exportToPDF(dashboardElementId, data, filename);
+
+      alert("PDF exported successfully! ✅");
     } catch (error) {
       console.error("Export error:", error);
       const errorMessage =
