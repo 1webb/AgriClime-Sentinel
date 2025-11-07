@@ -902,6 +902,12 @@ async function captureChartAsImage(chartId: string): Promise<string | null> {
   try {
     console.log(`[Chart Capture] Attempting to capture: ${chartId}`);
 
+    // Check if we're in browser environment
+    if (typeof window === 'undefined' || typeof document === 'undefined') {
+      console.error('[Chart Capture] Not in browser environment');
+      return null;
+    }
+
     const element = document.getElementById(chartId);
     if (!element) {
       console.error(`[Chart Capture] ❌ Element not found: ${chartId}`);
@@ -1047,6 +1053,12 @@ async function captureChartAsImage(chartId: string): Promise<string | null> {
  */
 async function forceRenderAllCharts(): Promise<() => void> {
   console.log("[Chart Rendering] Force rendering all charts...");
+
+  // Check if we're in browser environment
+  if (typeof window === 'undefined' || typeof document === 'undefined') {
+    console.warn('[Chart Rendering] Not in browser environment, skipping chart rendering');
+    return () => {}; // Return empty cleanup function
+  }
 
   const originalStates: Array<{ element: HTMLElement; display: string }> = [];
 
