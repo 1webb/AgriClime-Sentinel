@@ -21,13 +21,19 @@ Experience the full platform with real-time atmospheric data, historical playbac
 
 ![Interactive Map View](screenshots/map-view.png)
 
-_Interactive map showing 3,221 US counties with climate data layers, historical playback (1970-2025), and multi-county comparison mode_
+_Interactive map showing 3,221 US counties with climate data layers, historical playback (1970-2025), and multi-county comparison mode with visual feedback_
 
 ### Atmospheric Science Dashboard
 
 ![Atmospheric Science Dashboard](screenshots/dashboard-overview.png)
 
 _Real-time weather alerts, severe weather indices, air quality monitoring, and 55-year climate trend analysis with statistical significance testing_
+
+### Multi-County Comparison Dashboard
+
+![Comparison Dashboard](screenshots/comparison-dashboard.png)
+
+_Side-by-side comparison of up to 5 counties with interactive charts and detailed metrics table showing weather alerts, severe weather indices, air quality, and temperature trends_
 
 ---
 
