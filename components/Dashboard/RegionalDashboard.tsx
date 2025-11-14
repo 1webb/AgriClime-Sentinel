@@ -115,7 +115,7 @@ export default function RegionalDashboard({
     if (!loading && data && initialSection) {
       // Wait a bit for the DOM to render
       setTimeout(() => {
-        let targetRef: React.RefObject<HTMLDivElement> | null = null;
+        let targetRef: React.RefObject<HTMLDivElement> | undefined = undefined;
 
         switch (initialSection) {
           case "crop-risk":
