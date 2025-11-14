@@ -83,6 +83,15 @@ export default function Home() {
     selectedCountiesRef.current = selectedCountiesForComparison;
   }, [selectedCountiesForComparison]);
 
+  // Auto-update dashboard type when layer changes (if no county is selected)
+  useEffect(() => {
+    if (!selectedCounty) {
+      const layerConfig = getDashboardConfigForLayer(selectedLayer);
+      console.log("🔄 Layer changed to:", selectedLayer, "→ Setting default dashboard type to:", layerConfig.dashboardType);
+      setDashboardType(layerConfig.dashboardType);
+    }
+  }, [selectedLayer, selectedCounty]);
+
   // Historical playback state
   const [isHistoricalMode, setIsHistoricalMode] = useState(false);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
