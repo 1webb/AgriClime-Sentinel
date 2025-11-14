@@ -83,16 +83,12 @@ export default function Home() {
     selectedCountiesRef.current = selectedCountiesForComparison;
   }, [selectedCountiesForComparison]);
 
-  // Auto-update dashboard type when layer changes (if no county is selected)
+  // Auto-update dashboard type when layer changes (ONLY when layer changes, not when county changes)
   useEffect(() => {
-    if (!selectedCounty) {
-      const layerConfig = getDashboardConfigForLayer(selectedLayer);
-      console.log("🔄 Layer changed to:", selectedLayer, "→ Setting default dashboard type to:", layerConfig.dashboardType);
-      setDashboardType(layerConfig.dashboardType);
-    } else {
-      console.log("⏭️ Skipping dashboard type update - county is selected:", selectedCounty);
-    }
-  }, [selectedLayer, selectedCounty]);
+    const layerConfig = getDashboardConfigForLayer(selectedLayer);
+    console.log("🔄 Layer changed to:", selectedLayer, "→ Setting dashboard type to:", layerConfig.dashboardType);
+    setDashboardType(layerConfig.dashboardType);
+  }, [selectedLayer]); // Only depend on selectedLayer, NOT selectedCounty
 
   // Debug: Track dashboard type changes
   useEffect(() => {
@@ -180,12 +176,18 @@ export default function Home() {
       } else {
         // Normal single-county mode
         console.log("📍 Opening dashboard for:", countyData.name, countyData.state);
+        console.log("🔍 BEFORE setState - dashboardType should be:", layerConfig.dashboardType);
+        console.log("🔍 BEFORE setState - selectedLayer is:", selectedLayer);
 
         // Auto-set dashboard type based on selected layer
         setDashboardType(layerConfig.dashboardType);
+        console.log("✅ Called setDashboardType with:", layerConfig.dashboardType);
 
         setSelectedCountyData(countyData);
+        console.log("✅ Called setSelectedCountyData");
+
         setTimeout(() => {
+          console.log("⏰ setTimeout executing - setting selectedCounty to:", fips);
           setSelectedCounty(fips);
         }, 150);
       }
@@ -619,6 +621,22 @@ export default function Home() {
 
       {/* Dashboard Modals */}
       {/* Render Atmospheric Dashboard first to avoid race conditions */}
+      {(() => {
+        const shouldRenderAtmospheric = selectedCounty && dashboardType === "atmospheric" && selectedCountyData;
+        const shouldRenderAgricultural = selectedCounty && dashboardType === "agricultural";
+
+        console.log("🎨 RENDER CHECK:", {
+          selectedCounty,
+          dashboardType,
+          selectedCountyData: !!selectedCountyData,
+          shouldRenderAtmospheric,
+          shouldRenderAgricultural,
+          selectedLayer
+        });
+
+        return null;
+      })()}
+
       {selectedCounty &&
         dashboardType === "atmospheric" &&
         selectedCountyData && (
