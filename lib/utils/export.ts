@@ -1095,10 +1095,12 @@ async function forceRenderAllCharts(): Promise<() => void> {
     console.warn("[Chart Rendering] Dashboard content container not found, trying fallback...");
 
     // Fallback: Find all chart containers explicitly
+    // Include BOTH temperature and precipitation chart IDs since they're dynamic
     const chartIds = [
       'atmospheric-indices-chart',
       'pollutant-comparison-chart',
       'temperature-trend-chart',
+      'precipitation-trend-chart', // Added for layer-aware precipitation charts
       'skewt-diagram-canvas'
     ];
 
@@ -2103,9 +2105,13 @@ export async function exportAtmosphericDataToPDF(
 
       const trend = data.climateTrends.trend;
       const period = data.climateTrends.period;
+      const climateType = data.climateTrends.type || "temperature"; // Get the climate type (precipitation or temperature)
+      const isTemperature = climateType === "temperature";
+      const dataLabel = isTemperature ? "temperature" : "precipitation";
+      const dataUnit = isTemperature ? "°C" : "mm";
 
       addText(
-        `This section presents a comprehensive statistical analysis of historical temperature trends for ${countyName} County. The analysis employs linear regression and Mann-Kendall trend testing to identify significant long-term climate patterns and assess their implications for agricultural productivity, water resources, and public health planning.`,
+        `This section presents a comprehensive statistical analysis of historical ${dataLabel} trends for ${countyName} County. The analysis employs linear regression and Mann-Kendall trend testing to identify significant long-term climate patterns and assess their implications for agricultural productivity, water resources, and public health planning.`,
         11,
         false,
         [40, 40, 40],
@@ -2145,7 +2151,7 @@ export async function exportAtmosphericDataToPDF(
       const changeSymbol = trend.percentChange > 0 ? "+" : "";
       const changeColor: [number, number, number] = trend.percentChange > 0 ? [220, 38, 38] : [34, 197, 94];
       addText(
-        `Temperature Change: ${changeSymbol}${trend.percentChange.toFixed(2)}% over the analysis period`,
+        `${isTemperature ? "Temperature" : "Precipitation"} Change: ${changeSymbol}${trend.percentChange.toFixed(2)}% over the analysis period`,
         11,
         true,
         changeColor,
@@ -2178,21 +2184,30 @@ export async function exportAtmosphericDataToPDF(
       addText(trend.interpretation, 11, false, [40, 40, 40], 1.5);
       yPos += 5;
 
-      // Add temperature trend chart (only if data exists)
+      // Add climate trend chart with DYNAMIC chart ID based on climate type
       if (data.climateTrends.data && data.climateTrends.data.length > 0) {
         yPos += 8;
+
+        // Use the correct chart ID based on climate type
+        const chartId = isTemperature ? "temperature-trend-chart" : "precipitation-trend-chart";
+        const chartTitle = isTemperature
+          ? "Figure 3: Historical Temperature Trend Analysis with Linear Regression"
+          : "Figure 3: Historical Precipitation Trend Analysis with Linear Regression";
+
+        console.log(`[PDF] 📊 Adding climate trend chart: ${chartId} (type: ${climateType})`);
+
         await addChartImage(
-          "temperature-trend-chart",
-          "Figure 3: Historical Temperature Trend Analysis with Linear Regression",
+          chartId,
+          chartTitle,
           160,
           85
         );
       } else {
-        console.log("[PDF] ⚠️ Skipping temperature trend chart - no climate data available");
+        console.log("[PDF] ⚠️ Skipping climate trend chart - no climate data available");
       }
     } else {
       addSectionHeader("SECTION 4: LONG-TERM CLIMATE TREND ANALYSIS", [156, 163, 175], 1);
-      addText("Climate trend data is currently unavailable for this location. Historical temperature records may be incomplete or unavailable for this geographic area.", 11, false, [60, 60, 60], 1.5);
+      addText("Climate trend data is currently unavailable for this location. Historical climate records may be incomplete or unavailable for this geographic area.", 11, false, [60, 60, 60], 1.5);
       yPos += 5;
     }
 
