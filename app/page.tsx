@@ -286,39 +286,40 @@ export default function Home() {
               </p>
             </div>
 
-            {/* Dashboard Type Selector */}
+            {/* Dashboard Type Indicator (Auto-selected based on layer) */}
             <div className="flex flex-col gap-2 sm:gap-3 w-full lg:max-w-2xl flex-shrink-0">
               <p className="text-xs sm:text-sm font-bold text-white text-center tracking-wide uppercase">
-                📊 Dashboard Mode
+                📊 Dashboard Mode (Auto-Selected)
               </p>
               <div className="flex flex-col sm:flex-row bg-white bg-opacity-40 rounded-xl sm:rounded-2xl p-1.5 sm:p-2 shadow-xl backdrop-blur-md gap-1.5 sm:gap-2">
-                <button
-                  onClick={() => setDashboardType("atmospheric")}
+                <div
                   className={`flex-1 px-4 sm:px-6 md:px-8 py-3 sm:py-4 rounded-lg sm:rounded-xl font-bold text-sm sm:text-base transition-all duration-200 ${
                     dashboardType === "atmospheric"
                       ? "bg-blue-600 text-white shadow-xl"
-                      : "bg-white bg-opacity-50 text-blue-800 hover:bg-opacity-80 hover:shadow-lg"
+                      : "bg-white bg-opacity-30 text-blue-800 opacity-50"
                   }`}
                 >
                   <div className="flex items-center justify-center gap-1.5 sm:gap-2">
                     <span className="text-xl sm:text-2xl">🌪️</span>
                     <span>Atmospheric</span>
                   </div>
-                </button>
-                <button
-                  onClick={() => setDashboardType("agricultural")}
+                </div>
+                <div
                   className={`flex-1 px-4 sm:px-6 md:px-8 py-3 sm:py-4 rounded-lg sm:rounded-xl font-bold text-sm sm:text-base transition-all duration-200 ${
                     dashboardType === "agricultural"
                       ? "bg-green-600 text-white shadow-xl"
-                      : "bg-white bg-opacity-50 text-green-800 hover:bg-opacity-80 hover:shadow-lg"
+                      : "bg-white bg-opacity-30 text-green-800 opacity-50"
                   }`}
                 >
                   <div className="flex items-center justify-center gap-1.5 sm:gap-2">
                     <span className="text-xl sm:text-2xl">🌾</span>
                     <span>Agricultural</span>
                   </div>
-                </button>
+                </div>
               </div>
+              <p className="text-xs text-white text-center opacity-75 -mt-1">
+                Changes automatically based on selected data layer
+              </p>
             </div>
           </div>
         </div>
@@ -617,15 +618,7 @@ export default function Home() {
       </div>
 
       {/* Dashboard Modals */}
-      {selectedCounty && dashboardType === "agricultural" && (
-        <RegionalDashboard
-          countyFips={selectedCounty}
-          onClose={handleCloseDashboard}
-          selectedLayer={selectedLayer}
-          initialSection={getDashboardConfigForLayer(selectedLayer).initialSection}
-        />
-      )}
-
+      {/* Render Atmospheric Dashboard first to avoid race conditions */}
       {selectedCounty &&
         dashboardType === "atmospheric" &&
         selectedCountyData && (
@@ -640,6 +633,15 @@ export default function Home() {
             initialTab={getDashboardConfigForLayer(selectedLayer).initialTab}
           />
         )}
+
+      {selectedCounty && dashboardType === "agricultural" && (
+        <RegionalDashboard
+          countyFips={selectedCounty}
+          onClose={handleCloseDashboard}
+          selectedLayer={selectedLayer}
+          initialSection={getDashboardConfigForLayer(selectedLayer).initialSection}
+        />
+      )}
 
       {/* Comparison Dashboard Modal */}
       {showComparisonDashboard && selectedCountiesForComparison.length >= 2 && (
