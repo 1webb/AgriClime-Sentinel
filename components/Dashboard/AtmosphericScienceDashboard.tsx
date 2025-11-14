@@ -9,6 +9,7 @@ import {
   TrendingUp,
   Activity,
   CloudRain,
+  Thermometer,
 } from "lucide-react";
 import {
   LineChart,
@@ -515,7 +516,7 @@ export default function AtmosphericScienceDashboard({
             ) : (
               <>
                 {/* Threat Assessment */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
                   <div className="bg-gradient-to-br from-orange-50 to-orange-100 border-2 border-orange-300 rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-6 shadow-lg hover:shadow-xl transition-shadow">
                     <div className="flex items-center justify-between mb-2">
                       <Wind className="text-orange-600" size={20} />
@@ -576,6 +577,27 @@ export default function AtmosphericScienceDashboard({
                       )}`}
                     >
                       {severeWeatherIndices.hailPotential}
+                    </p>
+                  </div>
+
+                  <div className="bg-gradient-to-br from-amber-50 to-amber-100 border-2 border-amber-300 rounded-lg sm:rounded-xl p-3 sm:p-4 md:p-6 shadow-lg hover:shadow-xl transition-shadow">
+                    <div className="flex items-center justify-between mb-2">
+                      <Thermometer className="text-amber-600" size={20} />
+                      <span className="text-xs font-semibold text-amber-700 bg-amber-200 px-2 py-0.5 rounded-full">
+                        {severeWeatherIndices.maxTemperature
+                          ? `${severeWeatherIndices.maxTemperature.toFixed(1)}°C`
+                          : "N/A"}
+                      </span>
+                    </div>
+                    <h4 className="text-sm sm:text-base md:text-lg font-semibold text-gray-700 mb-1">
+                      Heatwave Potential
+                    </h4>
+                    <p
+                      className={`text-2xl sm:text-3xl md:text-4xl font-bold ${getPotentialColor(
+                        severeWeatherIndices.heatwavePotential
+                      )}`}
+                    >
+                      {severeWeatherIndices.heatwavePotential}
                     </p>
                   </div>
                 </div>
@@ -767,6 +789,50 @@ export default function AtmosphericScienceDashboard({
                       </p>
                       <p className="text-xs text-gray-500 mt-1">Parameter</p>
                     </div>
+                    {severeWeatherIndices.heatWaves !== undefined && (
+                      <div className="text-center p-3 sm:p-4 bg-gradient-to-br from-amber-50 to-white rounded-lg border border-amber-100">
+                        <p className="text-xs sm:text-sm text-gray-600 mb-1">
+                          Heat Waves
+                        </p>
+                        <p className="text-2xl sm:text-3xl font-bold text-amber-600">
+                          {severeWeatherIndices.heatWaves}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1">Last 30d</p>
+                      </div>
+                    )}
+                    {severeWeatherIndices.extremeHeatDays !== undefined && (
+                      <div className="text-center p-3 sm:p-4 bg-gradient-to-br from-red-50 to-white rounded-lg border border-red-100">
+                        <p className="text-xs sm:text-sm text-gray-600 mb-1">
+                          Extreme Heat Days
+                        </p>
+                        <p className="text-2xl sm:text-3xl font-bold text-red-600">
+                          {severeWeatherIndices.extremeHeatDays}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1">Last 30d</p>
+                      </div>
+                    )}
+                    {severeWeatherIndices.consecutiveHotDays !== undefined && (
+                      <div className="text-center p-3 sm:p-4 bg-gradient-to-br from-orange-50 to-white rounded-lg border border-orange-100">
+                        <p className="text-xs sm:text-sm text-gray-600 mb-1">
+                          Consecutive Hot Days
+                        </p>
+                        <p className="text-2xl sm:text-3xl font-bold text-orange-600">
+                          {severeWeatherIndices.consecutiveHotDays}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1">Current</p>
+                      </div>
+                    )}
+                    {severeWeatherIndices.maxTemperature !== undefined && (
+                      <div className="text-center p-3 sm:p-4 bg-gradient-to-br from-yellow-50 to-white rounded-lg border border-yellow-100">
+                        <p className="text-xs sm:text-sm text-gray-600 mb-1">
+                          Max Temperature
+                        </p>
+                        <p className="text-2xl sm:text-3xl font-bold text-yellow-600">
+                          {severeWeatherIndices.maxTemperature.toFixed(1)}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1">°C</p>
+                      </div>
+                    )}
                   </div>
                 </div>
 

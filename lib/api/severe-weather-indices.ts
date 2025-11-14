@@ -35,10 +35,17 @@ export interface SevereWeatherIndices {
   significantTornadoParameter: number; // STP
   supercellCompositeParameter: number; // SCP
 
+  // Heatwave Metrics (optional - from climate trends API)
+  heatWaves?: number; // Number of heat wave events
+  extremeHeatDays?: number; // Days above 95th percentile
+  consecutiveHotDays?: number; // Current consecutive hot days
+  maxTemperature?: number; // Current/recent max temperature (°C)
+
   // Interpretation
   tornadoPotential: "None" | "Low" | "Moderate" | "High" | "Extreme";
   severeThunderstormPotential: "None" | "Low" | "Moderate" | "High" | "Extreme";
   hailPotential: "None" | "Low" | "Moderate" | "High" | "Extreme";
+  heatwavePotential: "None" | "Low" | "Moderate" | "High" | "Extreme";
 }
 
 /**
@@ -241,10 +248,55 @@ function calculateSTP(
 }
 
 /**
+ * Calculate heatwave potential based on temperature and extremes data
+ *
+ * Interpretation:
+ * - None: No heatwave conditions
+ * - Low: Warm temperatures, 1-2 consecutive hot days
+ * - Moderate: 3-4 consecutive days above threshold
+ * - High: 5-7 consecutive days above threshold or extreme heat
+ * - Extreme: 8+ consecutive days or dangerous heat index
+ */
+export function calculateHeatwavePotential(
+  heatWaves: number = 0,
+  extremeHeatDays: number = 0,
+  consecutiveHotDays: number = 0,
+  maxTemperature: number = 0
+): SevereWeatherIndices["heatwavePotential"] {
+  // Extreme: Dangerous heat conditions
+  if (consecutiveHotDays >= 8 || maxTemperature >= 40) {
+    return "Extreme";
+  }
+
+  // High: Extended heat wave or very high temperature
+  if (consecutiveHotDays >= 5 || maxTemperature >= 38 || heatWaves >= 3) {
+    return "High";
+  }
+
+  // Moderate: Heat wave conditions developing
+  if (consecutiveHotDays >= 3 || maxTemperature >= 35 || heatWaves >= 2) {
+    return "Moderate";
+  }
+
+  // Low: Warm conditions
+  if (consecutiveHotDays >= 1 || maxTemperature >= 32 || extremeHeatDays >= 10) {
+    return "Low";
+  }
+
+  return "None";
+}
+
+/**
  * Calculate all severe weather indices
  */
 export function calculateSevereWeatherIndices(
-  sounding: AtmosphericSounding
+  sounding: AtmosphericSounding,
+  heatwaveData?: {
+    heatWaves?: number;
+    extremeHeatDays?: number;
+    consecutiveHotDays?: number;
+    maxTemperature?: number;
+  }
 ): SevereWeatherIndices {
   const cape = calculateCAPE(sounding);
   const cin = 0; // Simplified - would need proper calculation
@@ -278,6 +330,16 @@ export function calculateSevereWeatherIndices(
   else if (cape > 1000 && liftedIndex < -2) hailPotential = "Moderate";
   else if (cape > 500) hailPotential = "Low";
 
+  // Calculate heatwave potential if data provided
+  const heatwavePotential = heatwaveData
+    ? calculateHeatwavePotential(
+        heatwaveData.heatWaves,
+        heatwaveData.extremeHeatDays,
+        heatwaveData.consecutiveHotDays,
+        heatwaveData.maxTemperature
+      )
+    : "None";
+
   return {
     cape,
     cin,
@@ -289,9 +351,14 @@ export function calculateSevereWeatherIndices(
     stormRelativeHelicity0to3km: srh,
     significantTornadoParameter: stp,
     supercellCompositeParameter: scp,
+    heatWaves: heatwaveData?.heatWaves,
+    extremeHeatDays: heatwaveData?.extremeHeatDays,
+    consecutiveHotDays: heatwaveData?.consecutiveHotDays,
+    maxTemperature: heatwaveData?.maxTemperature,
     tornadoPotential,
     severeThunderstormPotential,
     hailPotential,
+    heatwavePotential,
   };
 }
 

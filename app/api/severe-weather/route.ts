@@ -12,6 +12,91 @@ import {
 } from "@/lib/api/severe-weather-indices";
 
 /**
+ * Fetch recent temperature data and calculate heatwave metrics
+ */
+async function fetchHeatwaveData(
+  lat: number,
+  lon: number
+): Promise<{
+  heatWaves: number;
+  extremeHeatDays: number;
+  consecutiveHotDays: number;
+  maxTemperature: number;
+} | null> {
+  try {
+    // Fetch recent 30-day temperature data from Open-Meteo
+    const endDate = new Date().toISOString().split("T")[0];
+    const startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+      .toISOString()
+      .split("T")[0];
+
+    const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${startDate}&end_date=${endDate}&daily=temperature_2m_max&timezone=auto`;
+
+    const response = await fetch(url, {
+      headers: {
+        "User-Agent": "AgriClime-Sentinel/1.0",
+      },
+      next: { revalidate: 3600 }, // Cache for 1 hour
+    });
+
+    if (!response.ok) {
+      return null;
+    }
+
+    const data = await response.json();
+
+    if (!data.daily || !data.daily.temperature_2m_max) {
+      return null;
+    }
+
+    const temperatures = data.daily.temperature_2m_max.filter(
+      (t: number | null) => t !== null
+    ) as number[];
+
+    if (temperatures.length === 0) {
+      return null;
+    }
+
+    // Calculate 95th percentile for heat threshold
+    const sortedTemps = [...temperatures].sort((a, b) => a - b);
+    const temp95 = sortedTemps[Math.floor(sortedTemps.length * 0.95)];
+
+    // Count extreme heat days (above 95th percentile)
+    const extremeHeatDays = temperatures.filter((t) => t > temp95).length;
+
+    // Detect heat waves (3+ consecutive days above 95th percentile)
+    let heatWaves = 0;
+    let consecutiveHot = 0;
+    let currentConsecutive = 0;
+
+    for (const temp of temperatures) {
+      if (temp > temp95) {
+        consecutiveHot++;
+        currentConsecutive++;
+        if (consecutiveHot === 3) {
+          heatWaves++;
+        }
+      } else {
+        consecutiveHot = 0;
+        currentConsecutive = 0;
+      }
+    }
+
+    // Get max temperature from recent data
+    const maxTemperature = Math.max(...temperatures);
+
+    return {
+      heatWaves,
+      extremeHeatDays,
+      consecutiveHotDays: currentConsecutive,
+      maxTemperature,
+    };
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Fetch atmospheric sounding data from NOAA HRRR model
  * HRRR (High-Resolution Rapid Refresh) is NOAA's real-time 3km resolution model
  * that replaced the RAP/RUC models
@@ -119,13 +204,18 @@ export async function GET(request: NextRequest) {
 
     let sounding: AtmosphericSounding;
     let dataSource = "sample";
+    let heatwaveData = null;
 
     // Try to fetch real NOAA data if coordinates provided and not forcing sample
     if (latStr && lonStr && !useSample) {
       const lat = parseFloat(latStr);
       const lon = parseFloat(lonStr);
 
-      const noaaSounding = await fetchNOAASounding(lat, lon);
+      // Fetch both sounding and heatwave data in parallel
+      const [noaaSounding, heatwave] = await Promise.all([
+        fetchNOAASounding(lat, lon),
+        fetchHeatwaveData(lat, lon),
+      ]);
 
       if (noaaSounding) {
         sounding = noaaSounding;
@@ -135,12 +225,14 @@ export async function GET(request: NextRequest) {
         sounding = generateSampleSounding();
         dataSource = "sample (NOAA data unavailable)";
       }
+
+      heatwaveData = heatwave;
     } else {
       // Use sample data
       sounding = generateSampleSounding();
     }
 
-    const indices = calculateSevereWeatherIndices(sounding);
+    const indices = calculateSevereWeatherIndices(sounding, heatwaveData || undefined);
 
     const response: {
       success: boolean;

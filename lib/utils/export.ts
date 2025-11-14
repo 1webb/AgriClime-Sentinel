@@ -1844,10 +1844,101 @@ export async function exportAtmosphericDataToPDF(
         85
       );
 
-      // ========== SECTION 3.5: ATMOSPHERIC SOUNDING - SKEW-T LOG-P DIAGRAM ==========
+      // ========== SECTION 3.5: SEVERE WEATHER POTENTIAL ASSESSMENT ==========
+      yPos += 10;
+      addSectionHeader("3.5 Severe Weather Potential Assessment", [168, 85, 247], 2);
+
+      addText(
+        "Based on the atmospheric indices and current conditions, the following severe weather potentials have been assessed:",
+        11,
+        false,
+        [40, 40, 40],
+        1.5
+      );
+      yPos += 6;
+
+      // Create a grid of potential boxes
+      const potentials = [
+        { name: "Tornado Potential", value: indices.tornadoPotential || "None", color: [249, 115, 22] },
+        { name: "Severe Thunderstorm", value: indices.severeThunderstormPotential || "None", color: [220, 38, 38] },
+        { name: "Hail Potential", value: indices.hailPotential || "None", color: [168, 85, 247] },
+        { name: "Heatwave Potential", value: indices.heatwavePotential || "None", color: [251, 191, 36] }
+      ];
+
+      potentials.forEach((potential, index) => {
+        if (index % 2 === 0 && index > 0) {
+          yPos += 22;
+          checkNewPage(25);
+        }
+
+        const xOffset = index % 2 === 0 ? leftMargin : leftMargin + contentWidth / 2 + 2;
+        const boxWidth = contentWidth / 2 - 2;
+
+        // Determine color intensity based on potential level
+        const level = potential.value.toLowerCase();
+        let bgColor: [number, number, number];
+        let textColor: [number, number, number];
+
+        if (level === "extreme") {
+          bgColor = [254, 242, 242];
+          textColor = [220, 38, 38];
+        } else if (level === "high") {
+          bgColor = [255, 247, 237];
+          textColor = [249, 115, 22];
+        } else if (level === "moderate") {
+          bgColor = [254, 252, 232];
+          textColor = [234, 179, 8];
+        } else if (level === "low") {
+          bgColor = [240, 253, 244];
+          textColor = [34, 197, 94];
+        } else {
+          bgColor = [249, 250, 251];
+          textColor = [107, 114, 128];
+        }
+
+        pdf.setFillColor(bgColor[0], bgColor[1], bgColor[2]);
+        pdf.rect(xOffset, yPos, boxWidth, 20, "F");
+        pdf.setDrawColor(textColor[0], textColor[1], textColor[2]);
+        pdf.setLineWidth(0.5);
+        pdf.rect(xOffset, yPos, boxWidth, 20, "S");
+
+        pdf.setTextColor(60, 60, 60);
+        pdf.setFontSize(10);
+        pdf.setFont("helvetica", "bold");
+        pdf.text(potential.name, xOffset + boxWidth / 2, yPos + 7, { align: "center" });
+
+        pdf.setTextColor(textColor[0], textColor[1], textColor[2]);
+        pdf.setFontSize(14);
+        pdf.text(potential.value, xOffset + boxWidth / 2, yPos + 15, { align: "center" });
+      });
+
+      yPos += 22;
+
+      // Add heatwave metrics if available
+      if (indices.heatWaves !== undefined || indices.extremeHeatDays !== undefined) {
+        yPos += 8;
+        addText("Heatwave Metrics (Last 30 Days):", 11, true, [40, 40, 40], 1.4);
+        yPos += 2;
+
+        if (indices.heatWaves !== undefined) {
+          addBullet(`Heat Wave Events: ${indices.heatWaves}`, 10);
+        }
+        if (indices.extremeHeatDays !== undefined) {
+          addBullet(`Extreme Heat Days: ${indices.extremeHeatDays}`, 10);
+        }
+        if (indices.consecutiveHotDays !== undefined) {
+          addBullet(`Current Consecutive Hot Days: ${indices.consecutiveHotDays}`, 10);
+        }
+        if (indices.maxTemperature !== undefined) {
+          addBullet(`Maximum Temperature: ${indices.maxTemperature.toFixed(1)}°C (${(indices.maxTemperature * 9/5 + 32).toFixed(1)}°F)`, 10);
+        }
+        yPos += 5;
+      }
+
+      // ========== SECTION 3.6: ATMOSPHERIC SOUNDING - SKEW-T LOG-P DIAGRAM ==========
       if (data.sounding && data.sounding.pressure && data.sounding.temperature) {
         yPos += 10;
-        addSectionHeader("3.5 Atmospheric Sounding - Skew-T Log-P Diagram", [168, 85, 247], 2);
+        addSectionHeader("3.6 Atmospheric Sounding - Skew-T Log-P Diagram", [168, 85, 247], 2);
 
         addText(
           "The Skew-T log-P diagram is a fundamental tool in operational meteorology for analyzing the vertical structure of the atmosphere. This thermodynamic diagram displays temperature and dewpoint profiles as a function of pressure (altitude), enabling meteorologists to assess atmospheric stability, identify inversion layers, and calculate convective parameters.",
@@ -1893,10 +1984,10 @@ export async function exportAtmosphericDataToPDF(
         );
       }
 
-      // ========== SECTION 3.6: 7-DAY WEATHER FORECAST ==========
+      // ========== SECTION 3.7: 7-DAY WEATHER FORECAST ==========
       if (data.forecast && data.forecast.length > 0) {
         yPos += 10;
-        addSectionHeader("3.6 Extended Weather Forecast (7-Day Outlook)", [168, 85, 247], 2);
+        addSectionHeader("3.7 Extended Weather Forecast (7-Day Outlook)", [168, 85, 247], 2);
 
         addText(
           "The following 7-day forecast provides detailed meteorological predictions from the NOAA National Weather Service. This forecast integrates numerical weather prediction models with local observations to provide actionable weather intelligence for planning agricultural operations, outdoor activities, and emergency preparedness.",
@@ -2323,6 +2414,39 @@ export function exportAtmosphericDataToCSV(
     if (indices.total_totals !== undefined) {
       csvData.push(["Total Totals", indices.total_totals.toFixed(1), ""]);
     }
+
+    // Add severe weather potentials
+    csvData.push([""], ["Severe Weather Potential"]);
+    if (indices.tornadoPotential !== undefined) {
+      csvData.push(["Tornado Potential", indices.tornadoPotential, ""]);
+    }
+    if (indices.severeThunderstormPotential !== undefined) {
+      csvData.push(["Severe Thunderstorm Potential", indices.severeThunderstormPotential, ""]);
+    }
+    if (indices.hailPotential !== undefined) {
+      csvData.push(["Hail Potential", indices.hailPotential, ""]);
+    }
+    if (indices.heatwavePotential !== undefined) {
+      csvData.push(["Heatwave Potential", indices.heatwavePotential, ""]);
+    }
+
+    // Add heatwave metrics
+    if (indices.heatWaves !== undefined || indices.extremeHeatDays !== undefined) {
+      csvData.push([""], ["Heatwave Metrics (Last 30 Days)"]);
+      if (indices.heatWaves !== undefined) {
+        csvData.push(["Heat Waves", indices.heatWaves.toString(), ""]);
+      }
+      if (indices.extremeHeatDays !== undefined) {
+        csvData.push(["Extreme Heat Days", indices.extremeHeatDays.toString(), ""]);
+      }
+      if (indices.consecutiveHotDays !== undefined) {
+        csvData.push(["Consecutive Hot Days", indices.consecutiveHotDays.toString(), ""]);
+      }
+      if (indices.maxTemperature !== undefined) {
+        csvData.push(["Max Temperature (°C)", indices.maxTemperature.toFixed(1), ""]);
+      }
+    }
+
     csvData.push([""]);
   }
 

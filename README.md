@@ -272,7 +272,7 @@ Experience the full platform with real-time atmospheric data, historical playbac
 
 ##### Severe Weather Indices
 ![Severe Weather](screenshots/atmospheric-severe-tab.png)
-*8 atmospheric instability indices from NOAA HRRR model: CAPE, Helicity, Shear, LI, K-Index, Total Totals, SWEAT, BRN*
+*4 severe weather potentials (Tornado, Severe Thunderstorm, Hail, Heatwave) + 8 atmospheric instability indices from NOAA HRRR model: CAPE, Helicity, Shear, LI, K-Index, Total Totals, STP, SCP*
 
 </td>
 <td width="50%">
@@ -612,6 +612,12 @@ Result: Comprehensive atmospheric science analysis with agro-meteorological appl
 
 The platform integrates **NOAA HRRR (High-Resolution Rapid Refresh) model** data to provide real-time severe weather assessment:
 
+**Severe Weather Potential Assessment (4 Categories):**
+- **Tornado Potential**: Based on STP (Significant Tornado Parameter) - None/Low/Moderate/High/Extreme
+- **Severe Thunderstorm Potential**: Based on SCP (Supercell Composite Parameter) - None/Low/Moderate/High/Extreme
+- **Hail Potential**: Based on CAPE and atmospheric instability - None/Low/Moderate/High/Extreme
+- **Heatwave Potential**: Based on temperature extremes and consecutive hot days - None/Low/Moderate/High/Extreme
+
 **Atmospheric Instability Parameters:**
 - **CAPE (Convective Available Potential Energy)**: Measures atmospheric instability and updraft potential
 - **Lifted Index (LI)**: Indicates likelihood of thunderstorm development
@@ -623,7 +629,13 @@ The platform integrates **NOAA HRRR (High-Resolution Rapid Refresh) model** data
 - **Significant Tornado Parameter (STP)**: Composite index for tornado likelihood
 - **Supercell Composite Parameter (SCP)**: Identifies environments favorable for rotating storms
 
-**Scientific Application**: Operational meteorology, severe weather forecasting, atmospheric dynamics research
+**Heatwave Metrics (Last 30 Days):**
+- **Heat Wave Events**: Number of 3+ consecutive day heat events above 95th percentile
+- **Extreme Heat Days**: Days exceeding 95th percentile temperature threshold
+- **Consecutive Hot Days**: Current streak of above-threshold temperatures
+- **Maximum Temperature**: Recent peak temperature in Celsius
+
+**Scientific Application**: Operational meteorology, severe weather forecasting, atmospheric dynamics research, heat health monitoring
 
 ### 2. Air Quality Monitoring & Atmospheric Chemistry
 
@@ -1036,7 +1048,8 @@ Risk Score = (Rainfall Deficit × 0.30) +
 
 **🌪️ Atmospheric Science Dashboard:**
 - **Weather Alerts**: NOAA NWS active warnings, watches, advisories
-- **Severe Weather Indices**: CAPE, SRH, STP, SCP, wind shear, lifted index
+- **Severe Weather Indices**: 4 potential assessments (Tornado, Severe Thunderstorm, Hail, Heatwave) + 8 atmospheric parameters (CAPE, SRH, STP, SCP, wind shear, lifted index, K-Index, Total Totals)
+- **Heatwave Metrics**: Heat wave events, extreme heat days, consecutive hot days, max temperature (last 30 days)
 - **Air Quality**: 6 EPA criteria pollutants with AQI categorization
 - **Climate Trends**: 55-year temperature analysis with statistical significance testing
 
