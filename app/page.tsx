@@ -4,6 +4,7 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { Menu, X } from "lucide-react";
 import { MapDataLayer, CropType } from "@/types";
+import { getDashboardConfigForLayer } from "@/lib/utils/layer-dashboard-mapping";
 import LayerSelector from "@/components/Map/LayerSelector";
 import MapLegend from "@/components/Map/MapLegend";
 import CountySearch from "@/components/Search/CountySearch";
@@ -99,6 +100,10 @@ export default function Home() {
    * - Before: Fetched all 3,221 counties (30+ seconds)
    * - After: Fetches only the clicked county (<100ms)
    * - 99.7% faster response time
+   *
+   * Smart Dashboard Opening (Option 2):
+   * - Automatically sets dashboard type based on selected map layer
+   * - Opens to the relevant tab/section for the selected layer
    */
   const handleCountyClick = useCallback(async (fips: string) => {
     // Use ref to get the latest state value
@@ -106,6 +111,10 @@ export default function Home() {
     const currentSelectedCounties = selectedCountiesRef.current;
 
     console.log("🗺️ County clicked:", fips, "Comparison mode (ref):", currentComparisonMode);
+
+    // Get dashboard configuration for the selected layer
+    const layerConfig = getDashboardConfigForLayer(selectedLayer);
+    console.log("📊 Auto-setting dashboard type to:", layerConfig.dashboardType, "for layer:", selectedLayer);
 
     // Fetch only the clicked county (fast, <100ms)
     try {
@@ -153,6 +162,10 @@ export default function Home() {
       } else {
         // Normal single-county mode
         console.log("📍 Opening dashboard for:", countyData.name, countyData.state);
+
+        // Auto-set dashboard type based on selected layer
+        setDashboardType(layerConfig.dashboardType);
+
         setSelectedCountyData(countyData);
         setTimeout(() => {
           setSelectedCounty(fips);
@@ -174,13 +187,16 @@ export default function Home() {
           setSelectedCountiesForComparison(prev => [...prev, countyData]);
         }
       } else {
+        // Auto-set dashboard type even on error
+        setDashboardType(layerConfig.dashboardType);
+
         setSelectedCountyData(countyData);
         setTimeout(() => {
           setSelectedCounty(fips);
         }, 150);
       }
     }
-  }, []);
+  }, [selectedLayer]);
 
   const handleCloseDashboard = () => {
     setSelectedCounty(null);
@@ -587,6 +603,8 @@ export default function Home() {
         <RegionalDashboard
           countyFips={selectedCounty}
           onClose={handleCloseDashboard}
+          selectedLayer={selectedLayer}
+          initialSection={getDashboardConfigForLayer(selectedLayer).initialSection}
         />
       )}
 
@@ -600,6 +618,8 @@ export default function Home() {
             latitude={selectedCountyData.latitude}
             longitude={selectedCountyData.longitude}
             onClose={handleCloseDashboard}
+            selectedLayer={selectedLayer}
+            initialTab={getDashboardConfigForLayer(selectedLayer).initialTab}
           />
         )}
 

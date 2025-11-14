@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
-import { RegionalDashboardData } from "@/types";
+import { useEffect, useState, useCallback, useRef } from "react";
+import { RegionalDashboardData, MapDataLayer } from "@/types";
 import {
   LineChart,
   Line,
@@ -15,15 +15,20 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import ExportButtons from "@/components/Export/ExportButtons";
+import { getLayerContextDescription } from "@/lib/utils/layer-dashboard-mapping";
 
 interface RegionalDashboardProps {
   countyFips: string;
   onClose: () => void;
+  selectedLayer?: string;
+  initialSection?: "crop-risk" | "drought" | "soil-moisture" | "precipitation" | "temperature";
 }
 
 export default function RegionalDashboard({
   countyFips,
   onClose,
+  selectedLayer,
+  initialSection,
 }: RegionalDashboardProps) {
   const [data, setData] = useState<RegionalDashboardData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -33,6 +38,13 @@ export default function RegionalDashboard({
     countyName?: string;
     countyState?: string;
   } | null>(null);
+
+  // Refs for scrolling to sections
+  const cropRiskRef = useRef<HTMLDivElement>(null);
+  const droughtRef = useRef<HTMLDivElement>(null);
+  const soilMoistureRef = useRef<HTMLDivElement>(null);
+  const precipitationRef = useRef<HTMLDivElement>(null);
+  const temperatureRef = useRef<HTMLDivElement>(null);
 
   /**
    * Helper function to fetch with timeout
@@ -97,6 +109,38 @@ export default function RegionalDashboard({
   useEffect(() => {
     loadDashboardData();
   }, [loadDashboardData]);
+
+  // Scroll to initial section after data loads
+  useEffect(() => {
+    if (!loading && data && initialSection) {
+      // Wait a bit for the DOM to render
+      setTimeout(() => {
+        let targetRef: React.RefObject<HTMLDivElement> | null = null;
+
+        switch (initialSection) {
+          case "crop-risk":
+            targetRef = cropRiskRef;
+            break;
+          case "drought":
+            targetRef = droughtRef;
+            break;
+          case "soil-moisture":
+            targetRef = soilMoistureRef;
+            break;
+          case "precipitation":
+            targetRef = precipitationRef;
+            break;
+          case "temperature":
+            targetRef = temperatureRef;
+            break;
+        }
+
+        if (targetRef?.current) {
+          targetRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      }, 300);
+    }
+  }, [loading, data, initialSection]);
 
   if (loading) {
     return (
@@ -168,6 +212,12 @@ export default function RegionalDashboard({
             <p className="text-blue-100 mt-0.5 sm:mt-1 text-xs sm:text-sm md:text-base">
               Regional Climate Dashboard
             </p>
+            {selectedLayer && (
+              <div className="mt-2 inline-flex items-center gap-1.5 bg-white bg-opacity-20 px-2.5 py-1 rounded-full text-xs sm:text-sm">
+                <span className="font-semibold">Viewing:</span>
+                <span>{getLayerContextDescription(selectedLayer as MapDataLayer)}</span>
+              </div>
+            )}
           </div>
 
           {/* Export Button */}

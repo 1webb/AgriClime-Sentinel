@@ -25,9 +25,11 @@ import {
 } from "recharts";
 import type { WeatherAlert, WeatherForecast } from "@/lib/api/noaa-weather";
 import type { SevereWeatherIndices } from "@/lib/api/severe-weather-indices";
+import type { MapDataLayer } from "@/types";
 import AtmosphericExportButtons from "@/components/Export/AtmosphericExportButtons";
 import ChartExportButton from "@/components/Export/ChartExportButton";
 import SkewTDiagram from "@/components/Atmospheric/SkewTDiagram";
+import { getLayerContextDescription } from "@/lib/utils/layer-dashboard-mapping";
 
 interface AirQualityObservation {
   dateObserved: string;
@@ -96,6 +98,8 @@ interface AtmosphericScienceDashboardProps {
   latitude: number;
   longitude: number;
   onClose: () => void;
+  selectedLayer?: string;
+  initialTab?: "alerts" | "severe" | "airquality" | "trends" | "forecast";
 }
 
 export default function AtmosphericScienceDashboard({
@@ -105,12 +109,14 @@ export default function AtmosphericScienceDashboard({
   latitude,
   longitude,
   onClose,
+  selectedLayer,
+  initialTab = "alerts",
 }: AtmosphericScienceDashboardProps) {
   const [loading, setLoading] = useState(true);
   const [loadingProgress, setLoadingProgress] = useState<string>("Initializing...");
   const [activeTab, setActiveTab] = useState<
     "alerts" | "severe" | "airquality" | "trends" | "forecast"
-  >("alerts");
+  >(initialTab);
 
   const [weatherAlerts, setWeatherAlerts] = useState<WeatherAlert[]>([]);
   const [severeWeatherIndices, setSevereWeatherIndices] =
@@ -313,6 +319,12 @@ export default function AtmosphericScienceDashboard({
             <p className="text-blue-200 text-xs sm:text-sm mt-0.5 sm:mt-1 truncate">
               {latitude.toFixed(4)}°N, {Math.abs(longitude).toFixed(4)}°W
             </p>
+            {selectedLayer && (
+              <div className="mt-2 inline-flex items-center gap-1.5 bg-white bg-opacity-20 px-2.5 py-1 rounded-full text-xs sm:text-sm">
+                <span className="font-semibold">Viewing:</span>
+                <span>{getLayerContextDescription(selectedLayer as MapDataLayer)}</span>
+              </div>
+            )}
           </div>
 
           {/* Export Button */}
