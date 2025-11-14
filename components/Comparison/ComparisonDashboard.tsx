@@ -54,7 +54,12 @@ export default function ComparisonDashboard({
   useEffect(() => {
     // Fetch data for all counties in parallel
     const fetchAllCountyData = async () => {
+      console.log("🔄 ComparisonDashboard: Fetching data for", counties.length, "counties");
+
       const promises = counties.map(async (county) => {
+        console.log("📍 Fetching data for:", county.name, county.state, "FIPS:", county.fips);
+        console.log("📍 Coordinates:", county.latitude, county.longitude);
+
         try {
           const [alertsRes, severeRes, aqRes, trendsRes] = await Promise.all([
             fetch(`/api/weather-alerts?lat=${county.latitude}&lon=${county.longitude}`),
@@ -70,6 +75,13 @@ export default function ComparisonDashboard({
             trendsRes.json().catch(() => ({ success: false })),
           ]);
 
+          console.log(`📊 ${county.name} API responses:`, {
+            alerts: alertsData,
+            severe: severeData,
+            aq: aqData,
+            trends: trendsData
+          });
+
           // Calculate metrics
           const alertCount = alertsData.success ? (alertsData.alerts?.length || 0) : 0;
           const severeScore = severeData.success && severeData.indices?.cape
@@ -79,6 +91,13 @@ export default function ComparisonDashboard({
           const tempTrend = trendsData.success && trendsData.trend?.slope
             ? trendsData.trend.slope
             : 0;
+
+          console.log(`✅ ${county.name} metrics:`, {
+            alertCount,
+            severeScore,
+            aqi,
+            tempTrend
+          });
 
           return {
             fips: county.fips,
@@ -108,6 +127,7 @@ export default function ComparisonDashboard({
       });
 
       const results = await Promise.all(promises);
+      console.log("🎯 Final metrics array:", results);
       setMetrics(results);
     };
 
@@ -134,6 +154,14 @@ export default function ComparisonDashboard({
     name: `${m.name}, ${m.state}`,
     trend: m.temperatureTrend,
   }));
+
+  console.log("📊 Chart data prepared:", {
+    alertsChartData,
+    severeWeatherChartData,
+    airQualityChartData,
+    temperatureTrendChartData,
+    metricsCount: metrics.length
+  });
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 sm:p-4 z-[9999]">
